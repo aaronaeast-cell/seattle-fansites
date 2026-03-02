@@ -1,0 +1,105 @@
+name: Deploy Fan Sites to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mariners/**'
+      - 'kraken/**'
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          MARINERS_CHANGED=false
+          KRAKEN_CHANGED=false
+
+          echo "$CHANGED" | grep -q "^mariners/" && MARINERS_CHANGED=true || true
+          echo "$CHANGED" | grep -q "^kraken/" && KRAKEN_CHANGED=true || true
+
+          echo "mariners=$MARINERS_CHANGED" >> $GITHUB_OUTPUT
+          echo "kraken=$KRAKEN_CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Validate HTML syntax
+        run: |
+          ERRORS=0
+          for f in mariners/index.html mariners/stats.html kraken/index.html kraken/stats.html; do
+            if [ -f "$f" ]; then
+              # Check for unclosed script tags
+              OPEN=$(grep -c "<script" "$f" || true)
+              CLOSE=$(grep -c "</script>" "$f" || true)
+              if [ "$OPEN" != "$CLOSE" ]; then
+                echo "ERROR: $f has mismatched script tags ($OPEN open, $CLOSE close)"
+                ERRORS=$((ERRORS + 1))
+              else
+                echo "OK: $f"
+              fi
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "Validation failed - aborting deploy"
+            exit 1
+          fi
+          echo "All files passed validation"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy Mariners site
+        if: steps.changed.outputs.mariners == 'true'
+        run: |
+          echo "Deploying Mariners files..."
+          for f in mariners/index.html mariners/stats.html; do
+            if git diff --name-only HEAD~1 HEAD | grep -q "^$f$"; then
+              echo "Uploading $f"
+              aws s3 cp "$f" "s3://mariners-fansite/$(basename $f)" \
+                --content-type "text/html" \
+                --cache-control "no-cache, no-store"
+            fi
+          done
+          echo "Mariners deploy complete"
+
+      - name: Deploy Kraken site
+        if: steps.changed.outputs.kraken == 'true'
+        run: |
+          echo "Deploying Kraken files..."
+          for f in kraken/index.html kraken/stats.html; do
+            if git diff --name-only HEAD~1 HEAD | grep -q "^$f$"; then
+              echo "Uploading $f"
+              aws s3 cp "$f" "s3://kraken-fansite/$(basename $f)" \
+                --content-type "text/html" \
+                --cache-control "no-cache, no-store"
+            fi
+          done
+          echo "Kraken deploy complete"
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "=============================="
+          echo "  DEPLOYMENT SUMMARY"
+          echo "=============================="
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "Mariners changed: ${{ steps.changed.outputs.mariners }}"
+          echo "Kraken changed: ${{ steps.changed.outputs.kraken }}"
+          echo "Status: ${{ job.status }}"
+          echo "=============================="
