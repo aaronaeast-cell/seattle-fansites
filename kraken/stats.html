@@ -1,0 +1,550 @@
+<!--
+  Seattle Kraken Stats Page
+  Version: 1.1
+  Updated: 2026-02-28
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seattle Kraken Stats</title>
+  <meta name="theme-color" content="#001B2E" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --deep: #001B2E;
+      --ocean: #003F5C;
+      --ice: #99D9D9;
+      --red: #C8102E;
+      --silver: #A2AAAD;
+      --white: #F0F4F8;
+      --dark: #000D17;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--dark); color: var(--white); font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      background: linear-gradient(160deg, var(--dark) 0%, var(--deep) 40%, #002840 70%, var(--ocean) 100%);
+      border-bottom: 2px solid rgba(153,217,217,0.3);
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--ice), var(--red), var(--ice), transparent);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 1.75rem 3rem;
+    }
+    .hero-logo { height: 90px; width: auto; filter: drop-shadow(0 0 20px rgba(153,217,217,0.4)); flex-shrink: 0; }
+    .hero-text h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+    .hero-text h1 .ice { color: var(--ice); }
+    .hero-text h1 .red { color: var(--red); }
+    .hero-text p { margin-top: 0.5rem; font-size: 0.85rem; color: var(--silver); letter-spacing: 0.25em; text-transform: uppercase; font-weight: 300; }
+
+    /* NAV */
+    nav { background: rgba(0,13,23,0.97); border-bottom: 1px solid rgba(153,217,217,0.15); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+    nav ul { display: flex; list-style: none; padding: 0 2rem; overflow-x: auto; }
+    nav a { display: block; padding: 0.9rem 1.25rem; color: var(--silver); text-decoration: none; font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+    nav a:hover, nav a.active { color: var(--ice); border-bottom-color: var(--ice); }
+
+    /* TABS */
+    .tabs-bar { background: rgba(0,13,23,0.6); border-bottom: 1px solid rgba(153,217,217,0.1); padding: 0 2rem; display: flex; overflow-x: auto; gap: 0; }
+    .tab-btn { padding: 0.9rem 1.5rem; background: none; border: none; color: var(--silver); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn:hover { color: var(--white); }
+    .tab-btn.active { color: var(--ice); border-bottom-color: var(--ice); }
+
+    /* MAIN */
+    main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .section-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .section-header .line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(153,217,217,0.4), transparent); }
+    .section-header .tag { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 3px; background: var(--ocean); color: var(--ice); border: 1px solid rgba(153,217,217,0.3); }
+
+    /* STATS TABLE */
+    .stats-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(153,217,217,0.15); }
+    .stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 600px; }
+    .stats-table thead th {
+      background: rgba(0,63,92,0.5);
+      padding: 0.7rem 0.75rem;
+      text-align: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ice);
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+      position: sticky;
+      top: 0;
+    }
+    .stats-table thead th:hover { background: rgba(0,63,92,0.8); }
+    .stats-table thead th.sorted-asc::after { content: ' ▲'; font-size: 0.6rem; }
+    .stats-table thead th.sorted-desc::after { content: ' ▼'; font-size: 0.6rem; }
+    .stats-table thead th:first-child { text-align: left; }
+    .stats-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; cursor: pointer; }
+    .stats-table tbody tr:hover { background: rgba(153,217,217,0.05); }
+    .stats-table tbody tr.expanded { background: rgba(0,63,92,0.2); }
+    .stats-table tbody td { padding: 0.65rem 0.75rem; text-align: center; color: var(--silver); }
+    .stats-table tbody td:first-child { text-align: left; }
+    .stats-table tbody tr:last-child td { border-bottom: none; }
+
+    /* PLAYER NAME CELL */
+    .player-cell { display: flex; align-items: center; gap: 0.6rem; }
+    .player-cell img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: rgba(0,63,92,0.5); flex-shrink: 0; }
+    .player-cell .player-info { display: flex; flex-direction: column; }
+    .player-cell .name { font-weight: 600; color: var(--white); font-size: 0.85rem; white-space: nowrap; }
+    .player-cell .pos { font-size: 0.65rem; color: var(--ice); text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+    .player-cell .jersey { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; color: var(--silver); min-width: 20px; text-align: right; }
+
+    /* HIGHLIGHT STATS */
+    .stat-highlight { color: var(--white); font-weight: 700; }
+    .stat-top { color: var(--ice); font-weight: 800; }
+
+    /* EXPAND ROW */
+    .expand-row { display: none; }
+    .expand-row.open { display: table-row; }
+    .expand-row td { padding: 0; border-bottom: 1px solid rgba(153,217,217,0.15) !important; }
+    .expand-content {
+      padding: 1rem 1.25rem;
+      background: rgba(0,13,23,0.8);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .expand-group { min-width: 120px; }
+    .expand-group .group-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ice); margin-bottom: 0.5rem; }
+    .expand-group .stat-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .expand-group .stat-row:last-child { border-bottom: none; }
+    .expand-group .stat-label { font-size: 0.72rem; color: var(--silver); }
+    .expand-group .stat-val { font-size: 0.72rem; color: var(--white); font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
+
+    /* TEAM STATS CARDS */
+    .team-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: linear-gradient(135deg, rgba(0,27,46,0.8), rgba(0,63,92,0.3)); border: 1px solid rgba(153,217,217,0.15); border-radius: 8px; padding: 1.25rem; text-align: center; }
+    .stat-card .card-val { font-family: 'Barlow Condensed', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--ice); line-height: 1; }
+    .stat-card .card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--silver); margin-top: 0.4rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; }
+    .stat-card .card-sub { font-size: 0.75rem; color: var(--silver); margin-top: 0.25rem; }
+
+    /* GOALIE TABLE - same as stats but slightly different */
+    .goalie-note { font-size: 0.75rem; color: var(--silver); margin-bottom: 1rem; font-style: italic; }
+
+    /* PRESEASON MSG */
+    .preseason-msg { text-align: center; padding: 3rem; color: var(--silver); }
+    .preseason-msg .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .preseason-msg h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); margin-bottom: 0.5rem; }
+
+    /* LOADING */
+    .loading { text-align: center; padding: 3rem; color: var(--silver); }
+    .loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(153,217,217,0.2); border-top-color: var(--ice); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 0.5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { text-align: center; padding: 2rem; color: #e74c3c; }
+
+    footer { text-align: center; padding: 2rem; color: rgba(255,255,255,0.15); font-size: 0.72rem; letter-spacing: 0.08em; border-top: 1px solid rgba(153,217,217,0.1); margin-top: 2rem; font-family: 'Barlow Condensed', sans-serif; }
+
+    @media (max-width: 768px) {
+      main { padding: 1rem; }
+      .hero-inner { padding: 1rem 1.5rem; gap: 1rem; }
+      .hero-logo { height: 60px; }
+      .tabs-bar { padding: 0 0.5rem; }
+      .tab-btn { padding: 0.7rem 0.9rem; font-size: 0.85rem; }
+      .team-stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .expand-content { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <img src="logo.jpg" alt="Seattle Kraken" class="hero-logo" />
+    <div class="hero-text">
+      <h1>Kraken <span class="ice">2025</span><span class="red">-26</span></h1>
+      <p>Player &amp; Team Statistics</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="index.html">Scores</a></li>
+    <li><a href="index.html#standings">Standings</a></li>
+    <li><a href="index.html#news">News</a></li>
+    <li><a href="stats.html" class="active">Stats</a></li>
+  </ul>
+</nav>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" data-tab="skaters">Skaters</button>
+  <button class="tab-btn" data-tab="goalies">Goalies</button>
+  <button class="tab-btn" data-tab="team">Team Stats</button>
+  <button class="tab-btn" data-tab="roster">Roster</button>
+</div>
+
+<main>
+  <!-- SKATERS -->
+  <div class="tab-panel active" id="tab-skaters">
+    <div class="section-header">
+      <h2>Skater Stats</h2>
+      <div class="line"></div>
+      <span class="tag">2025-26</span>
+    </div>
+    <div id="skaters-container"><div class="loading">Loading skater stats</div></div>
+  </div>
+
+  <!-- GOALIES -->
+  <div class="tab-panel" id="tab-goalies">
+    <div class="section-header">
+      <h2>Goalie Stats</h2>
+      <div class="line"></div>
+      <span class="tag">2025-26</span>
+    </div>
+    <div id="goalies-container"><div class="loading">Loading goalie stats</div></div>
+  </div>
+
+  <!-- TEAM STATS -->
+  <div class="tab-panel" id="tab-team">
+    <div class="section-header">
+      <h2>Team Stats</h2>
+      <div class="line"></div>
+      <span class="tag">2025-26</span>
+    </div>
+    <div id="team-container"><div class="loading">Loading team stats</div></div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="tab-panel" id="tab-roster">
+    <div class="section-header">
+      <h2>Roster</h2>
+      <div class="line"></div>
+      <span class="tag">2025-26</span>
+    </div>
+    <div id="roster-container"><div class="loading">Loading roster</div></div>
+  </div>
+</main>
+
+<footer>
+  Seattle Kraken Stats &bull; Data via ESPN NHL API &bull; Not affiliated with the NHL or Seattle Kraken &bull; v1.1
+  <div style="margin-top:0.5rem;font-size:0.65rem;opacity:0.5">visitors: <span id="visit-count">...</span></div>
+</footer>
+
+<script>
+var NHL_PROXY = 'https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/nhl?path=';
+var loaded = {};
+
+async function fetchNHL(path) {
+  var res = await fetch(NHL_PROXY + encodeURIComponent(path));
+  if (!res.ok) throw new Error('NHL API error ' + res.status);
+  return res.json();
+}
+
+async function fetchESPN(endpoint) {
+  var url = 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/' + endpoint;
+  try {
+    var res = await fetch(url); if (!res.ok) throw new Error('status ' + res.status); return res.json();
+  } catch(e) {
+    var proxy = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
+    var res2 = await fetch(proxy); if (!res2.ok) throw new Error('ESPN error'); return res2.json();
+  }
+}
+
+function sortTable(tableId, colIdx, numeric) {
+  var table = document.getElementById(tableId); if (!table) return;
+  var tbody = table.querySelector('tbody');
+  var rows = Array.from(tbody.querySelectorAll('tr:not(.expand-row)'));
+  var th = table.querySelectorAll('thead th')[colIdx];
+  var asc = th.classList.contains('sorted-desc') || !th.classList.contains('sorted-asc');
+  table.querySelectorAll('thead th').forEach(function(t) { t.classList.remove('sorted-asc','sorted-desc'); });
+  th.classList.add(asc ? 'sorted-asc' : 'sorted-desc');
+  rows.sort(function(a, b) {
+    var ac = a.querySelectorAll('td')[colIdx]; var bc = b.querySelectorAll('td')[colIdx];
+    var av = ac ? ac.getAttribute('data-val') || ac.textContent.trim() : '';
+    var bv = bc ? bc.getAttribute('data-val') || bc.textContent.trim() : '';
+    if (numeric) { return asc ? (parseFloat(av)||0)-(parseFloat(bv)||0) : (parseFloat(bv)||0)-(parseFloat(av)||0); }
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(function(row) {
+    var next = row.nextElementSibling; tbody.appendChild(row);
+    if (next && next.classList.contains('expand-row')) tbody.appendChild(next);
+  });
+}
+
+function toggleExpand(row) {
+  var next = row.nextElementSibling; if (!next || !next.classList.contains('expand-row')) return;
+  var isOpen = next.classList.contains('open');
+  document.querySelectorAll('.expand-row.open').forEach(function(r) { r.classList.remove('open'); });
+  document.querySelectorAll('tr.expanded').forEach(function(r) { r.classList.remove('expanded'); });
+  if (!isOpen) { next.classList.add('open'); row.classList.add('expanded'); }
+}
+
+function fmtTOI(seconds) {
+  if (!seconds) return '-';
+  var m = Math.floor(seconds / 60); var s = Math.round(seconds % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function mkCard(val, label) {
+  return '<div class="stat-card"><div class="card-val">' + val + '</div><div class="card-label">' + label + '</div></div>';
+}
+
+function playerImg(headshot) {
+  return headshot ? '<img src="' + headshot + '" onerror="this.remove()" />' : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(0,63,92,0.5);flex-shrink:0"></div>';
+}
+
+function getName(p) {
+  return ((p.firstName && p.firstName.default ? p.firstName.default : '') + ' ' + (p.lastName && p.lastName.default ? p.lastName.default : '')).trim();
+}
+
+async function loadSkaters() {
+  if (loaded.skaters) return; loaded.skaters = true;
+  var container = document.getElementById('skaters-container');
+  try {
+    var data = await fetchNHL('club-stats/SEA/now');
+    var skaters = data.skaters || []; if (!skaters.length) throw new Error('No skater data');
+    skaters.sort(function(a,b) { return (b.points||0)-(a.points||0); });
+    var headers = ['Player','Pos','GP','G','A','PTS','+/-','PIM','SOG','S%','PPG','PPA','SHG','GWG','TOI/G'];
+    var numIdx = [2,3,4,5,6,7,8,9,10,11,12,13,14];
+    var html = '<div class="stats-table-wrap"><table class="stats-table" id="skaters-table"><thead><tr>';
+    headers.forEach(function(h,i) { html += '<th onclick="sortTable(\'skaters-table\',' + i + ',' + (numIdx.indexOf(i)>=0) + ')">' + h + '</th>'; });
+    html += '</tr></thead><tbody>';
+    skaters.forEach(function(p) {
+      var name = getName(p); var pos = p.positionCode||''; var gp = p.gamesPlayed||0;
+      var g = p.goals||0; var a = p.assists||0; var pts = p.points||0;
+      var pm = p.plusMinus||0; var pim = p.penaltyMinutes||0; var sog = p.shots||0;
+      var spct = p.shootingPctg !== undefined ? (p.shootingPctg*100).toFixed(1)+'%' : '-';
+      var ppg = p.powerPlayGoals||0; var ppa = p.powerPlayPoints ? (p.powerPlayPoints-ppg) : 0;
+      var shg = p.shorthandedGoals||0; var gwg = p.gameWinningGoals||0;
+      var toi = fmtTOI(p.avgTimeOnIcePerGame);
+      html += '<tr onclick="toggleExpand(this)">'
+        + '<td><div class="player-cell">' + playerImg(p.headshot) + '<div class="player-info"><span class="name">' + name + '</span></div></div></td>'
+        + '<td style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;color:var(--ice)">' + pos + '</td>'
+        + '<td data-val="' + gp + '">' + gp + '</td>'
+        + '<td data-val="' + g + '" class="' + (g>15?'stat-top':g>8?'stat-highlight':'') + '">' + g + '</td>'
+        + '<td data-val="' + a + '" class="' + (a>20?'stat-top':a>12?'stat-highlight':'') + '">' + a + '</td>'
+        + '<td data-val="' + pts + '" class="' + (pts>35?'stat-top':pts>15?'stat-highlight':'') + '">' + pts + '</td>'
+        + '<td data-val="' + pm + '">' + (pm>0?'+':'') + pm + '</td>'
+        + '<td data-val="' + pim + '">' + pim + '</td>'
+        + '<td data-val="' + sog + '">' + sog + '</td>'
+        + '<td data-val="' + (parseFloat(spct)||0) + '">' + spct + '</td>'
+        + '<td data-val="' + ppg + '">' + ppg + '</td>'
+        + '<td data-val="' + ppa + '">' + ppa + '</td>'
+        + '<td data-val="' + shg + '">' + shg + '</td>'
+        + '<td data-val="' + gwg + '">' + gwg + '</td>'
+        + '<td>' + toi + '</td>'
+        + '</tr><tr class="expand-row"><td colspan="' + headers.length + '"><div class="expand-content">'
+        + '<div class="expand-group"><div class="group-label">Scoring</div>'
+        + '<div class="stat-row"><span class="stat-label">Goals</span><span class="stat-val">' + g + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Assists</span><span class="stat-val">' + a + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Points</span><span class="stat-val">' + pts + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">GWG</span><span class="stat-val">' + gwg + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">OT Goals</span><span class="stat-val">' + (p.overtimeGoals||0) + '</span></div>'
+        + '</div><div class="expand-group"><div class="group-label">Power Play</div>'
+        + '<div class="stat-row"><span class="stat-label">PP Goals</span><span class="stat-val">' + ppg + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">PP Assists</span><span class="stat-val">' + ppa + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">PP Points</span><span class="stat-val">' + (p.powerPlayPoints||0) + '</span></div>'
+        + '</div><div class="expand-group"><div class="group-label">Ice Time</div>'
+        + '<div class="stat-row"><span class="stat-label">TOI/G</span><span class="stat-val">' + toi + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Shifts/G</span><span class="stat-val">' + (p.avgShiftsPerGame ? parseFloat(p.avgShiftsPerGame).toFixed(1) : '-') + '</span></div>'
+        + '</div><div class="expand-group"><div class="group-label">Shooting</div>'
+        + '<div class="stat-row"><span class="stat-label">Shots</span><span class="stat-val">' + sog + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Shoot%</span><span class="stat-val">' + spct + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">+/-</span><span class="stat-val">' + (pm>0?'+':'') + pm + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">PIM</span><span class="stat-val">' + pim + '</span></div>'
+        + '</div></div></td></tr>';
+    });
+    html += '</tbody></table></div><p style="margin-top:0.75rem;font-size:0.72rem;color:var(--silver)">Click any row to expand &bull; Click headers to sort &bull; Default: sorted by points</p>';
+    container.innerHTML = html;
+  } catch(err) { container.innerHTML = '<div class="error-msg">Could not load skater stats: ' + err.message + '</div>'; }
+}
+
+async function loadGoalies() {
+  if (loaded.goalies) return; loaded.goalies = true;
+  var container = document.getElementById('goalies-container');
+  try {
+    var data = await fetchNHL('club-stats/SEA/now');
+    var goalies = data.goalies || []; if (!goalies.length) throw new Error('No goalie data');
+    var headers = ['Goalie','GP','GS','W','L','OTL','GAA','SV%','SA','SV','GA','SO'];
+    var numIdx = [1,2,3,4,5,6,7,8,9,10,11];
+    var html = '<div class="stats-table-wrap"><table class="stats-table" id="goalies-table"><thead><tr>';
+    headers.forEach(function(h,i) { html += '<th onclick="sortTable(\'goalies-table\',' + i + ',' + (numIdx.indexOf(i)>=0) + ')">' + h + '</th>'; });
+    html += '</tr></thead><tbody>';
+    goalies.forEach(function(p) {
+      var name = getName(p); var gp = p.gamesPlayed||0; var gs = p.gamesStarted||0;
+      var w = p.wins||0; var l = p.losses||0; var otl = p.overtimeLosses||0;
+      var gaa = p.goalsAgainstAverage !== undefined ? parseFloat(p.goalsAgainstAverage).toFixed(2) : '-';
+      var svp = p.savePercentage !== undefined ? '.' + Math.round(p.savePercentage*1000) : '-';
+      var sa = p.shotsAgainst||0; var saves = p.saves||0; var ga = p.goalsAgainst||0; var so = p.shutouts||0;
+      html += '<tr onclick="toggleExpand(this)">'
+        + '<td><div class="player-cell">' + playerImg(p.headshot) + '<div class="player-info"><span class="name">' + name + '</span><span class="pos">G</span></div></div></td>'
+        + '<td data-val="' + gp + '">' + gp + '</td>'
+        + '<td data-val="' + gs + '">' + gs + '</td>'
+        + '<td data-val="' + w + '" class="stat-highlight">' + w + '</td>'
+        + '<td data-val="' + l + '">' + l + '</td>'
+        + '<td data-val="' + otl + '">' + otl + '</td>'
+        + '<td data-val="' + (p.goalsAgainstAverage||99) + '" class="' + (parseFloat(gaa)<2.5?'stat-top':parseFloat(gaa)<3?'stat-highlight':'') + '">' + gaa + '</td>'
+        + '<td data-val="' + (p.savePercentage||0) + '" class="' + (p.savePercentage>.915?'stat-top':p.savePercentage>.905?'stat-highlight':'') + '">' + svp + '</td>'
+        + '<td data-val="' + sa + '">' + sa + '</td>'
+        + '<td data-val="' + saves + '">' + saves + '</td>'
+        + '<td data-val="' + ga + '">' + ga + '</td>'
+        + '<td data-val="' + so + '">' + so + '</td>'
+        + '</tr><tr class="expand-row"><td colspan="' + headers.length + '"><div class="expand-content">'
+        + '<div class="expand-group"><div class="group-label">Record</div>'
+        + '<div class="stat-row"><span class="stat-label">Wins</span><span class="stat-val">' + w + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Losses</span><span class="stat-val">' + l + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">OT Losses</span><span class="stat-val">' + otl + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Shutouts</span><span class="stat-val">' + so + '</span></div>'
+        + '</div><div class="expand-group"><div class="group-label">Performance</div>'
+        + '<div class="stat-row"><span class="stat-label">GAA</span><span class="stat-val">' + gaa + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Save %</span><span class="stat-val">' + svp + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Shots Against</span><span class="stat-val">' + sa + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Saves</span><span class="stat-val">' + saves + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">Goals Against</span><span class="stat-val">' + ga + '</span></div>'
+        + '</div><div class="expand-group"><div class="group-label">Games</div>'
+        + '<div class="stat-row"><span class="stat-label">GP</span><span class="stat-val">' + gp + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">GS</span><span class="stat-val">' + gs + '</span></div>'
+        + '<div class="stat-row"><span class="stat-label">TOI</span><span class="stat-val">' + fmtTOI(p.timeOnIce) + '</span></div>'
+        + '</div></div></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch(err) { container.innerHTML = '<div class="error-msg">Could not load goalie stats: ' + err.message + '</div>'; }
+}
+
+async function loadTeamStats() {
+  if (loaded.team) return; loaded.team = true;
+  var container = document.getElementById('team-container');
+  try {
+    var standData = await fetchNHL('standings/now');
+    var kraken = null;
+    (standData.standings||[]).forEach(function(t) { if (t.teamAbbrev && t.teamAbbrev.default === 'SEA') kraken = t; });
+    if (!kraken) throw new Error('Kraken not found');
+    var w=kraken.wins||0, l=kraken.losses||0, otl=kraken.otLosses||0, pts=kraken.points||0;
+    var gf=kraken.goalFor||0, ga=kraken.goalAgainst||0, diff=gf-ga;
+    var gfpg=kraken.goalForPerGamePlayed ? parseFloat(kraken.goalForPerGamePlayed).toFixed(2) : '-';
+    var gapg=kraken.goalAgainstPerGamePlayed ? parseFloat(kraken.goalAgainstPerGamePlayed).toFixed(2) : '-';
+    var pct=kraken.pointPctg ? (parseFloat(kraken.pointPctg)*100).toFixed(1)+'%' : '-';
+    var homeW=kraken.homeWins||0, homeL=kraken.homeLosses||0, homeOtl=kraken.homeOtLosses||0;
+    var awayW=kraken.roadWins||0, awayL=kraken.roadLosses||0, awayOtl=kraken.roadOtLosses||0;
+    var l10=kraken.l10Wins !== undefined ? kraken.l10Wins+'-'+kraken.l10Losses+'-'+(kraken.l10OtLosses||0) : '-';
+    var html = '<div class="team-stats-grid">'
+      + mkCard(w+'-'+l+'-'+otl,'Record') + mkCard(pts,'Points') + mkCard(pct,'Points %')
+      + mkCard(gf,'Goals For') + mkCard(ga,'Goals Against') + mkCard((diff>=0?'+':'')+diff,'Goal Diff')
+      + mkCard(gfpg,'Goals For/G') + mkCard(gapg,'Goals Against/G')
+      + mkCard(homeW+'-'+homeL+'-'+homeOtl,'Home Record') + mkCard(awayW+'-'+awayL+'-'+awayOtl,'Away Record')
+      + mkCard(l10,'Last 10') + mkCard(kraken.streakCode||'-','Streak') + '</div>';
+    html += '<div class="section-header" style="margin-top:2rem"><h2>Rankings</h2><div class="line"></div></div>';
+    html += '<div class="team-stats-grid">'
+      + mkCard('#'+(kraken.divisionSequence||'-'),'Division Rank')
+      + mkCard('#'+(kraken.conferenceSequence||'-'),'Conference Rank')
+      + mkCard('#'+(kraken.leagueSequence||'-'),'League Rank') + '</div>';
+    container.innerHTML = html;
+  } catch(err) { container.innerHTML = '<div class="error-msg">Could not load team stats: ' + err.message + '</div>'; }
+}
+
+async function loadRoster() {
+  if (loaded.roster) return; loaded.roster = true;
+  var container = document.getElementById('roster-container');
+  try {
+    var results = await Promise.all([fetchNHL('roster/SEA/20252026'), fetchNHL('club-stats/SEA/now')]);
+    var data = results[0]; var statsData = results[1];
+    var headshotMap = {};
+    (statsData.skaters||[]).forEach(function(p) { if (p.headshot) headshotMap[p.playerId] = p.headshot; });
+    (statsData.goalies||[]).forEach(function(p) { if (p.headshot) headshotMap[p.playerId] = p.headshot; });
+    var all = (data.forwards||[]).concat(data.defensemen||[]).concat(data.goalies||[]);
+    if (!all.length) throw new Error('No roster data');
+    all.sort(function(a,b) { return (a.sweaterNumber||99)-(b.sweaterNumber||99); });
+    var colStyle = 'font-family:Barlow Condensed,sans-serif;font-weight:700;color:var(--ice)';
+    var headers = ['#','Player','Pos','Shoots','Ht','Wt','Age','Birthplace'];
+    var html = '<div class="stats-table-wrap"><table class="stats-table" id="roster-table"><thead><tr>';
+    var rosterTblId = 'roster-table';
+    headers.forEach(function(h,i) {
+      html += '<th onclick="sortTable(\''+rosterTblId+'\',' + i + ',false)">' + h + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    all.forEach(function(p) {
+      var fn = p.firstName && p.firstName.default ? p.firstName.default : '';
+      var ln = p.lastName && p.lastName.default ? p.lastName.default : '';
+      var name = (fn + ' ' + ln).trim();
+      var jersey = p.sweaterNumber||'-';
+      var pos = p.positionCode||'-';
+      var shoots = p.shootsCatches||'-';
+      var ht = p.heightInInches ? Math.floor(p.heightInInches/12)+"'"+p.heightInInches%12+'"' : '-';
+      var wt = p.weightInPounds ? p.weightInPounds+' lbs' : '-';
+      var age = '-';
+      if (p.birthDate) {
+        var t=new Date(), bd=new Date(p.birthDate);
+        age=t.getFullYear()-bd.getFullYear()-(t<new Date(t.getFullYear(),bd.getMonth(),bd.getDate())?1:0);
+      }
+      var city = p.birthCity && p.birthCity.default ? p.birthCity.default : '';
+      var birth = [city, p.birthCountry||''].filter(Boolean).join(', ');
+      var hs = headshotMap[p.id] || '';
+      var imgHtml = hs ? '<img src="' + hs + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" />'
+                       : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(0,63,92,0.5);flex-shrink:0"></div>';
+      var row = document.createElement('tr');
+      row.innerHTML = '<td style="' + colStyle + '">' + jersey + '</td>'
+        + '<td><div class="player-cell">' + imgHtml + '<span style="font-weight:600;color:var(--white);white-space:nowrap">' + name + '</span></div></td>'
+        + '<td style="' + colStyle + '">' + pos + '</td>'
+        + '<td>' + shoots + '</td><td>' + ht + '</td><td>' + wt + '</td><td>' + age + '</td>'
+        + '<td style="text-align:left">' + (birth||'-') + '</td>';
+      html += row.outerHTML;
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch(err) { container.innerHTML = '<div class="error-msg">Could not load roster: ' + err.message + '</div>'; }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'skaters') loadSkaters();
+      else if (tab === 'goalies') loadGoalies();
+      else if (tab === 'team') loadTeamStats();
+      else if (tab === 'roster') loadRoster();
+    });
+  });
+  loadSkaters();
+  loadVisitCount();
+});
+
+async function loadVisitCount() {
+  try {
+    var res = await fetch('https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/visits');
+    var data = await res.json();
+    var el = document.getElementById('visit-count');
+    if (el) el.textContent = data.visits.toLocaleString();
+  } catch(e) {}
+}
+loadVisitCount();
+
+</script>
+</body>
+</html>

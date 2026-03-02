@@ -1,0 +1,832 @@
+<!--
+  Seattle Kraken Fan Site
+  Version: 1.0
+  Updated: 2026-02-28
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seattle Kraken Fan Site</title>
+  <meta name="theme-color" content="#001B2E" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --deep: #001B2E;
+      --ocean: #003F5C;
+      --ice: #99D9D9;
+      --red: #C8102E;
+      --silver: #A2AAAD;
+      --white: #F0F4F8;
+      --dark: #000D17;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: var(--dark); color: var(--white); font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      min-height: 200px;
+      background: linear-gradient(160deg, var(--dark) 0%, var(--deep) 40%, #002840 70%, var(--ocean) 100%);
+      border-bottom: 2px solid rgba(153,217,217,0.3);
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 50%, rgba(153,217,217,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(0,63,92,0.4) 0%, transparent 50%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--ice), var(--red), var(--ice), transparent);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 1.75rem 3rem;
+    }
+    .hero-logo { height: 90px; width: auto; filter: drop-shadow(0 0 20px rgba(153,217,217,0.4)); flex-shrink: 0; }
+    .hero-text h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+    .hero-text h1 .ice { color: var(--ice); }
+    .hero-text h1 .red { color: var(--red); }
+    .hero-text p { margin-top: 0.5rem; font-size: 0.85rem; color: var(--silver); letter-spacing: 0.25em; text-transform: uppercase; font-weight: 300; }
+
+    /* NAV */
+    nav { background: rgba(0,13,23,0.97); border-bottom: 1px solid rgba(153,217,217,0.15); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+    nav ul { display: flex; list-style: none; padding: 0 2rem; overflow-x: auto; }
+    nav a { display: block; padding: 0.9rem 1.25rem; color: var(--silver); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; }
+    nav a:hover { color: var(--ice); border-bottom-color: var(--ice); }
+
+    /* CITY BANNER */
+    .city-banner { position: relative; height: 260px; overflow: hidden; }
+    .city-banner img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(0.55) saturate(1.2); }
+    .city-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--dark) 100%); }
+    .city-banner-text { position: absolute; bottom: 1.5rem; left: 2rem; z-index: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+
+    /* COUNTDOWN */
+    .countdown-banner {
+      background: linear-gradient(135deg, rgba(0,27,46,0.9), rgba(0,63,92,0.4));
+      border-bottom: 1px solid rgba(153,217,217,0.15);
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+    .countdown-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ice); font-weight: 600; margin-bottom: 0.4rem; }
+    .countdown-units { display: flex; justify-content: center; align-items: flex-start; gap: 0.5rem; flex-wrap: nowrap; }
+    .countdown-unit { text-align: center; flex: 1; max-width: 70px; }
+    .countdown-unit .num { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(1.6rem, 6vw, 2.8rem); line-height: 1; color: var(--white); }
+    .countdown-unit .lbl { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--silver); }
+    .countdown-sep { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(1.4rem, 5vw, 2.5rem); color: var(--ice); flex-shrink: 0; }
+    .countdown-done { font-family: 'Barlow Condensed', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--ice); letter-spacing: 0.1em; }
+
+    /* MAIN LAYOUT */
+    main { max-width: 1300px; margin: 0 auto; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+
+    .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .section-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .section-header .line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(153,217,217,0.4), transparent); }
+    .tag { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 3px; background: var(--ocean); color: var(--ice); border: 1px solid rgba(153,217,217,0.3); }
+    .tag.live { background: var(--red); border-color: var(--red); color: var(--white); animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+    /* SCORES */
+    .scores-grid { display: block; } .scores-cards-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0; } .score-card { display: inline-block; min-width: 270px; max-width: 340px; width: calc(50% - 0.5rem); vertical-align: top; box-sizing: border-box; }
+    .score-card {
+      background: linear-gradient(135deg, rgba(0,27,46,0.8), rgba(0,63,92,0.3));
+      border: 1px solid rgba(153,217,217,0.15);
+      border-radius: 8px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .score-card:hover { border-color: rgba(153,217,217,0.4); transform: translateY(-2px); }
+    .score-card.expanded { border-color: var(--ice); border-radius: 8px 8px 0 0; transform: none; }
+    .score-card .expand-hint { text-align: center; font-size: 0.6rem; color: rgba(255,255,255,0.25); margin-top: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif; }
+    .game-status { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--silver); margin-bottom: 0.75rem; display: flex; justify-content: space-between; font-family: 'Barlow Condensed', sans-serif; }
+    .status-live { color: var(--red); font-weight: 700; }
+    .status-final { color: var(--silver); }
+    .status-scheduled { color: var(--ice); }
+    .score-matchup { display: flex; align-items: center; justify-content: space-between; }
+    .team-block { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 0.4rem; }
+    .team-block img { width: 44px; height: 44px; object-fit: contain; }
+    .team-abbr { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.05em; }
+    .team-score { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 800; line-height: 1; }
+    .team-block.winner .team-score { color: var(--ice); }
+    .vs-divider { font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; color: rgba(255,255,255,0.2); padding: 0 0.4rem; }
+
+    /* GAME DETAIL PANEL */
+    .game-detail-panel { display: none; background: rgba(0,13,23,0.97); border: 1px solid var(--ice); border-top: none; border-radius: 0 0 8px 8px; padding: 1.25rem; margin-bottom: 1rem; }
+    .game-detail-panel.open { display: block; }
+    .linescore-wrap { overflow-x: auto; margin-bottom: 1rem; }
+    .linescore-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 400px; }
+    .linescore-table th { background: rgba(0,63,92,0.4); padding: 0.4rem 0.5rem; text-align: center; color: var(--silver); font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 0.05em; min-width: 26px; }
+    .linescore-table td { padding: 0.4rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--silver); }
+    .linescore-table td.team-col { text-align: left; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--white); padding-left: 0.5rem; min-width: 45px; }
+    .linescore-table td.total { font-weight: 700; color: var(--white); background: rgba(0,63,92,0.2); }
+    .linescore-table tr.sea-row td { color: var(--white); }
+    .detail-section { margin-bottom: 1rem; }
+    .detail-section h4 { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ice); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(153,217,217,0.2); padding-bottom: 0.25rem; }
+    .matchup-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .matchup-box { flex: 1; min-width: 120px; background: rgba(0,27,46,0.6); border-radius: 6px; padding: 0.6rem 0.75rem; border: 1px solid rgba(153,217,217,0.1); }
+    .matchup-box .role { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ice); font-weight: 700; margin-bottom: 0.25rem; font-family: 'Barlow Condensed', sans-serif; }
+    .matchup-box .name { font-size: 0.85rem; font-weight: 600; color: var(--white); }
+    .matchup-box .stat { font-size: 0.75rem; color: var(--silver); margin-top: 0.2rem; }
+    .scoring-play { font-size: 0.78rem; color: var(--silver); padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .scoring-play.kraken-goal { background: rgba(153,217,217,0.05); border-radius: 4px; padding: 0.5rem 0.4rem; }
+    .play-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
+    .play-scorer { font-weight: 600; color: var(--white); font-size: 0.82rem; }
+    .play-assists { font-size: 0.72rem; color: var(--silver); margin-top: 0.15rem; }
+    .scoring-plays-list { display: flex; flex-direction: column; gap: 0.1rem; }
+    .scoring-play:last-child { border-bottom: none; }
+    .scoring-play .period-tag { font-size: 0.65rem; font-weight: 700; color: var(--ice); margin-right: 0.4rem; text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif; }
+    .scoring-play .score-change { font-weight: 700; color: var(--white); margin-left: 0.4rem; }
+    .live-status-box { display: flex; gap: 1.5rem; align-items: center; background: rgba(0,63,92,0.2); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; flex-wrap: wrap; border: 1px solid rgba(153,217,217,0.1); }
+    .live-stat { text-align: center; }
+    .live-stat .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--white); }
+    .live-stat .lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--silver); }
+    .detail-loading { text-align: center; padding: 1.5rem; color: var(--silver); font-size: 0.85rem; }
+    .detail-loading::after { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(153,217,217,0.2); border-top-color: var(--ice); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 0.5rem; vertical-align: middle; }
+
+    /* SIDEBAR */
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+    .next-game-card { background: linear-gradient(135deg, rgba(0,63,92,0.4), rgba(0,27,46,0.6)); border: 1px solid rgba(153,217,217,0.2); border-radius: 8px; padding: 1.5rem; text-align: center; }
+    .next-game-card .label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ice); font-weight: 700; margin-bottom: 1rem; }
+    .opponent { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 800; margin: 0.5rem 0; }
+    .game-time { font-size: 0.85rem; color: var(--silver); }
+
+    /* STANDINGS */
+    .standings-card { background: rgba(0,27,46,0.5); border: 1px solid rgba(153,217,217,0.15); border-radius: 8px; overflow: hidden; }
+    .standings-card table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .standings-card th { background: rgba(0,63,92,0.4); padding: 0.6rem 0.75rem; text-align: left; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--silver); font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
+    .standings-card td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--silver); font-size: 0.82rem; }
+    .standings-card tr:last-child td { border-bottom: none; }
+    .standings-card tr.kraken-row td { color: var(--white); font-weight: 700; background: rgba(0,63,92,0.2); }
+    .team-name-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .team-name-cell img { width: 20px; height: 20px; object-fit: contain; }
+
+    /* NEWS */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1rem; }
+    .news-card { background: rgba(0,27,46,0.5); border: 1px solid rgba(153,217,217,0.1); border-radius: 8px; overflow: hidden; transition: transform 0.2s, border-color 0.2s; text-decoration: none; display: block; color: inherit; }
+    .news-card:hover { transform: translateY(-3px); border-color: rgba(153,217,217,0.3); }
+    .news-card img { width: 100%; height: 155px; object-fit: cover; display: block; }
+    .img-placeholder { width: 100%; height: 155px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--deep), var(--ocean)); font-size: 3rem; }
+    .news-body { padding: 1rem; }
+    .news-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ice); font-weight: 700; margin-bottom: 0.4rem; }
+    .news-card h3 { font-size: 0.92rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.4rem; color: var(--white); }
+    .news-card p { font-size: 0.78rem; color: var(--silver); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* WIN BANNER */
+    .win-banner { position: relative; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 1.5rem; }
+    .win-banner img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; filter: brightness(0.5) saturate(1.3); }
+    .win-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,27,46,0.6), transparent); }
+    .win-banner-text { position: absolute; bottom: 1rem; left: 1.25rem; z-index: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--white); line-height: 1; }
+    .win-banner-text span { color: var(--ice); }
+
+    /* UTILS */
+    .loading { text-align: center; padding: 3rem; color: var(--silver); font-size: 0.9rem; }
+    .loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(153,217,217,0.2); border-top-color: var(--ice); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 0.5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { text-align: center; padding: 2rem; color: #e74c3c; font-size: 0.85rem; }
+
+    footer { text-align: center; padding: 2rem; color: rgba(255,255,255,0.15); font-size: 0.72rem; letter-spacing: 0.08em; border-top: 1px solid rgba(153,217,217,0.1); margin-top: 2rem; font-family: 'Barlow Condensed', sans-serif; }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; padding: 1rem; }
+      .sidebar { order: -1; }
+      .hero-inner { padding: 1.25rem 1.5rem; gap: 1rem; }
+      .scores-cards-row { flex-direction: column; }
+      .score-card { width: 100% !important; max-width: 100% !important; display: block; }
+      .news-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      body { overflow-x: hidden; }
+      main { padding: 0.75rem; }
+      .hero-inner { padding: 1rem; gap: 0.75rem; }
+      .hero-logo { height: 55px; }
+      .hero-text h1 { font-size: 2.5rem; }
+      .scores-cards-row { flex-direction: column; }
+      .score-card { width: 100% !important; max-width: 100% !important; display: block; }
+      .news-grid { grid-template-columns: 1fr; }
+      .city-banner { height: 180px; }
+      nav ul { padding: 0 0.5rem; }
+      nav a { padding: 0.7rem 0.75rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <img src="logo.jpg" alt="Seattle Kraken" class="hero-logo" />
+    <div class="hero-text">
+      <h1>Seattle<br><span class="ice">Krak</span><span class="red">en</span></h1>
+      <p>Release The Kraken &bull; Let's Go Kraken!</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="#scores">Scores</a></li>
+    <li><a href="#standings">Standings</a></li>
+    <li><a href="#news">News</a></li>
+    <li><a href="stats.html">Stats</a></li>
+  </ul>
+</nav>
+
+<div class="countdown-banner" id="countdown-banner">
+  <div class="countdown-label">&#9889; Next Kraken Home Game</div>
+  <div class="countdown-units" id="countdown-units">
+    <div class="countdown-unit"><div class="num" id="cd-days">--</div><div class="lbl">Days</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="num" id="cd-hours">--</div><div class="lbl">Hours</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="num" id="cd-mins">--</div><div class="lbl">Minutes</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="num" id="cd-secs">--</div><div class="lbl">Seconds</div></div>
+  </div>
+</div>
+
+<div class="city-banner">
+  <img src="krakencity.jpg" alt="Seattle Kraken City" />
+  <div class="city-banner-text">Climate Pledge Arena &bull; Seattle, WA</div>
+</div>
+
+<main>
+  <div>
+    <section id="scores">
+      <div class="section-header">
+        <h2>Recent Games</h2>
+        <span class="tag live" id="live-tag" style="display:none">Live</span>
+        <div class="line"></div>
+        <span class="tag">NHL</span>
+      </div>
+      <div class="scores-grid" id="scores-container">
+        <div class="loading">Loading scores</div>
+      </div>
+    </section>
+
+    <section id="news" style="margin-top:2.5rem">
+      <div class="section-header">
+        <h2>Latest News</h2>
+        <div class="line"></div>
+        <span class="tag">ESPN</span>
+      </div>
+      <div class="news-grid" id="news-container">
+        <div class="loading">Loading news</div>
+      </div>
+    </section>
+  </div>
+
+  <aside class="sidebar">
+    <div class="win-banner">
+      <img src="win.jpg" alt="Kraken Win" />
+      <div class="win-banner-text">Go<br><span>Kraken!</span></div>
+    </div>
+
+    <div class="next-game-card" id="next-game">
+      <div class="label">Next Game</div>
+      <div class="loading">Loading</div>
+    </div>
+
+    <section id="standings">
+      <div class="section-header">
+        <h2>Pacific</h2>
+        <div class="line"></div>
+      </div>
+      <div class="standings-card" id="standings-container">
+        <div class="loading">Loading</div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<footer>
+  Seattle Kraken Fan Site &bull; Scores &amp; data via ESPN &bull; Not affiliated with the NHL or Seattle Kraken &bull; v1.0
+  <div style="margin-top:0.5rem;font-size:0.65rem;opacity:0.5">visitors: <span id="visit-count">...</span></div>
+</footer>
+
+<script>
+async function fetchNHL(path) {
+  var res = await fetch('https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/nhl?path=' + encodeURIComponent(path));
+  if (!res.ok) throw new Error('NHL API error ' + res.status);
+  return res.json();
+}
+
+async function fetchNHL(path) {
+  var res = await fetch('https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/nhl?path=' + encodeURIComponent(path));
+  if (!res.ok) throw new Error('NHL API error ' + res.status);
+  return res.json();
+}
+
+var KRAKEN_ID = '57'; // ESPN NHL team ID for Seattle Kraken (confirmed)
+var NHL_TEAM_ID = 55; // NHL Stats API team ID for Seattle Kraken
+
+async function fetchESPN(endpoint) {
+  var url = 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/' + endpoint;
+  try {
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('status ' + res.status);
+    return res.json();
+  } catch(e) {
+    var proxy = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
+    var res2 = await fetch(proxy);
+    if (!res2.ok) throw new Error('ESPN error: ' + res2.status);
+    return res2.json();
+  }
+}
+
+function getTeamLogo(team) {
+  if (team.logo) return team.logo;
+  if (team.logos && team.logos.length > 0) return team.logos[0].href;
+  return '';
+}
+
+function makeImg(src, alt, style) {
+  if (!src) return '';
+  return '<img src="' + src + '" alt="' + (alt||'') + '"' + (style ? ' style="' + style + '"' : '') + ' onerror="this.remove()" />';
+}
+
+// SCORES
+async function loadScores(keepOpen) {
+  var container = document.getElementById('scores-container');
+  try {
+    var data = await fetchESPN('teams/sea/schedule');
+    var allEvents = data.events || [];
+
+    var krakenGames = allEvents.filter(function(e) {
+      var state = e.competitions[0].status.type.state;
+      var hasKRK = e.competitions[0].competitors.some(function(c) {
+        return (c.team.abbreviation || '').toUpperCase() === 'SEA' ||
+               String(c.team.id) === KRAKEN_ID ||
+               (c.team.displayName || '').toLowerCase().includes('kraken');
+      });
+      return (state === 'in' || state === 'post') && hasKRK;
+    }).slice(-3);
+
+    if (krakenGames.length === 0) {
+      container.innerHTML = '<div class="loading" style="animation:none">No recent Kraken games!</div>';
+      return;
+    }
+
+    var hasLive = false;
+    var html = '';
+
+    for (var i = 0; i < krakenGames.length; i++) {
+      var evt = krakenGames[i];
+      var comp = evt.competitions[0];
+      var status = comp.status.type;
+      var home = null, away = null;
+      for (var j = 0; j < comp.competitors.length; j++) {
+        if (comp.competitors[j].homeAway === 'home') home = comp.competitors[j];
+        else away = comp.competitors[j];
+      }
+      if (!home || !away) continue;
+
+      var isLive = status.state === 'in';
+      var isFinal = status.state === 'post';
+      if (isLive) hasLive = true;
+
+      var homeScore2 = typeof home.score === 'object' ? parseFloat(home.score.value||0) : parseFloat(home.score||0); var awayScore2 = typeof away.score === 'object' ? parseFloat(away.score.value||0) : parseFloat(away.score||0); var homeWin = isFinal && homeScore2 > awayScore2;
+      var awayWin = isFinal && awayScore2 > homeScore2;
+
+      var gameDate = evt.competitions[0].date ? new Date(evt.competitions[0].date).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+      var venue = (comp.venue && comp.venue.fullName) ? comp.venue.fullName : '';
+
+      var statusHtml = isLive
+        ? '<span class="status-live">&#9679; LIVE &mdash; ' + status.detail + '</span>'
+        : (isFinal ? '<span class="status-final">Final</span>' : '<span class="status-scheduled">' + (status.detail||'Scheduled') + '</span>');
+
+      var awayScore = status.state !== 'pre' ? '<div class="team-score">-</div>' : '';
+      var homeScore = status.state !== 'pre' ? '<div class="team-score">-</div>' : '';
+
+      html += '<div class="score-card" data-gameid="' + comp.id + '">'
+        + '<div class="game-status">' + statusHtml + '<span>' + gameDate + (venue ? ' &bull; ' + venue : '') + '</span></div>'
+        + '<div class="score-matchup">'
+        + '<div class="team-block' + (awayWin ? ' winner' : '') + '">'
+        + makeImg(getTeamLogo(away.team), away.team.abbreviation, '')
+        + '<span class="team-abbr">' + away.team.abbreviation + '</span>'
+        + awayScore + '</div>'
+        + '<div class="vs-divider">@</div>'
+        + '<div class="team-block' + (homeWin ? ' winner' : '') + '">'
+        + makeImg(getTeamLogo(home.team), home.team.abbreviation, '')
+        + '<span class="team-abbr">' + home.team.abbreviation + '</span>'
+        + homeScore + '</div>'
+        + '</div>'
+        + '<div class="expand-hint">Click for details &#9660;</div>'
+        + '</div>'
+        + '<div class="game-detail-panel" id="detail-' + comp.id + '"></div>';
+    }
+
+    // Wrap cards in row, panels go below
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    var panelHtml = '';
+    var panels = tempDiv.querySelectorAll('.game-detail-panel');
+    for (var pi = 0; pi < panels.length; pi++) {
+      panelHtml += panels[pi].outerHTML;
+      panels[pi].parentNode.removeChild(panels[pi]);
+    }
+    container.innerHTML = '<div class="scores-cards-row">' + tempDiv.innerHTML + '</div>' + panelHtml;
+    if (hasLive) document.getElementById('live-tag').style.display = 'inline';
+
+    var cards = container.querySelectorAll('.score-card');
+    for (var ci = 0; ci < cards.length; ci++) {
+      cards[ci].addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.game-detail-panel')) return;
+        var gameId = this.getAttribute('data-gameid');
+        var panel = document.getElementById('detail-' + gameId);
+        var isOpen = panel.classList.contains('open');
+        container.querySelectorAll('.game-detail-panel').forEach(function(p) { p.classList.remove('open'); });
+        container.querySelectorAll('.score-card').forEach(function(c) {
+          c.classList.remove('expanded');
+          var hint = c.querySelector('.expand-hint');
+          if (hint) hint.innerHTML = 'Click for details &#9660;';
+          // Restore cached real scores
+          var as = c.getAttribute('data-away-score');
+          var hs = c.getAttribute('data-home-score');
+          if (as !== null && hs !== null) {
+            var sc = c.querySelectorAll('.team-score');
+            if (sc.length >= 2) { sc[0].textContent = as; sc[1].textContent = hs; }
+          }
+        });
+        if (!isOpen) {
+          this.classList.add('expanded');
+          panel.classList.add('open');
+          var hint2 = this.querySelector('.expand-hint');
+          if (hint2) hint2.innerHTML = 'Click to close &#9650;';
+          if (!panel.hasAttribute('data-loaded')) loadGameDetail(gameId, panel);
+        }
+      });
+    }
+
+    if (keepOpen && keepOpen.length > 0) {
+      keepOpen.forEach(function(id) {
+        var c = container.querySelector('[data-gameid="' + id + '"]');
+        var p = document.getElementById('detail-' + id);
+        if (c && p) {
+          c.classList.add('expanded');
+          p.classList.add('open');
+          var hint = c.querySelector('.expand-hint');
+          if (hint) hint.innerHTML = 'Click to close &#9650;';
+        }
+      });
+    }
+
+    // Silently fetch real scores for all game cards in background
+    var allCards = container.querySelectorAll('.score-card');
+    allCards.forEach(function(card) {
+      var gid = card.getAttribute('data-gameid');
+      if (!gid) return;
+      fetchESPN('summary?event=' + gid).then(function(data) {
+        var comp = data.header && data.header.competitions ? data.header.competitions[0] : null;
+        if (!comp) return;
+        var awayC = comp.competitors.find(function(c) { return c.homeAway === 'away'; });
+        var homeC = comp.competitors.find(function(c) { return c.homeAway === 'home'; });
+        if (!awayC || !homeC) return;
+        var as = typeof awayC.score === 'object' ? (awayC.score.value||0) : (awayC.score||0);
+        var hs = typeof homeC.score === 'object' ? (homeC.score.value||0) : (homeC.score||0);
+        card.setAttribute('data-away-score', as);
+        card.setAttribute('data-home-score', hs);
+        var sc = card.querySelectorAll('.team-score');
+        if (sc.length >= 2) { sc[0].textContent = as; sc[1].textContent = hs; }
+      }).catch(function() {});
+    });
+
+  } catch(err) {
+    container.innerHTML = '<div class="error-msg">Could not load scores: ' + err.message + '</div>';
+  }
+}
+
+// GAME DETAIL - ESPN hockey summary
+async function loadGameDetail(gameId, panel) {
+  panel.setAttribute('data-loaded', '1');
+  panel.innerHTML = '<div class="detail-loading">Loading game details</div>';
+  try {
+    var data = await fetchESPN('summary?event=' + gameId);
+
+    var html = '';
+    var awayAbbr = '?', homeAbbr = '?';
+
+    // Get teams from header
+    var header = data.header || {};
+    var comp = header.competitions ? header.competitions[0] : null;
+    if (comp) {
+      var awayComp = comp.competitors.find(function(c) { return c.homeAway === 'away'; });
+      var homeComp = comp.competitors.find(function(c) { return c.homeAway === 'home'; });
+      awayAbbr = awayComp ? awayComp.team.abbreviation : '?';
+      homeAbbr = homeComp ? homeComp.team.abbreviation : '?';
+
+      // Period scores from linescores
+      var awayLs = awayComp ? (awayComp.linescores || []) : [];
+      var homeLs = homeComp ? (homeComp.linescores || []) : [];
+      if (awayLs.length > 0) {
+        html += '<div class="detail-section"><h4>Period Scores</h4><table class="linescore-table"><thead><tr><th></th>';
+        awayLs.forEach(function(ls, i) { html += '<th>' + (i < 3 ? (i+1) : 'OT') + '</th>'; });
+        html += '<th>T</th></tr></thead><tbody>';
+        var awayTotal = 0, homeTotal = 0;
+        html += '<tr><td class="team-col">' + awayAbbr + '</td>';
+        awayLs.forEach(function(ls) { var v = parseInt(ls.displayValue || ls.value || 0); awayTotal += v; html += '<td>' + v + '</td>'; });
+        html += '<td class="total">' + awayTotal + '</td></tr>';
+        html += '<tr class="sea-row"><td class="team-col">' + homeAbbr + '</td>';
+        homeLs.forEach(function(ls) { var v = parseInt(ls.displayValue || ls.value || 0); homeTotal += v; html += '<td>' + v + '</td>'; });
+        html += '<td class="total">' + homeTotal + '</td></tr>';
+        html += '</tbody></table></div>';
+      }
+    }
+
+    // Scoring plays - ESPN uses 'plays' array with scoringPlay:true flag
+    var allPlays = data.plays || [];
+    var scoringPlays = allPlays.filter(function(p) { return p.scoringPlay === true; });
+    if (scoringPlays.length > 0) {
+      html += '<div class="detail-section"><h4>Scoring Plays</h4><div class="scoring-plays-list">';
+      scoringPlays.forEach(function(play) {
+        var period = (play.period && play.period.displayValue) ? play.period.displayValue : '';
+        var clock = (play.clock && play.clock.displayValue) ? play.clock.displayValue : '';
+        var desc = play.text || play.shortText || '';
+        var awayScore = play.awayScore !== undefined ? play.awayScore : '';
+        var homeScore = play.homeScore !== undefined ? play.homeScore : '';
+        var score = awayScore !== '' ? awayAbbr + ' ' + awayScore + ' - ' + homeAbbr + ' ' + homeScore : '';
+        var teamAbbr = (play.team && play.team.abbreviation) ? play.team.abbreviation : '';
+        var isKrakenGoal = teamAbbr === 'SEA';
+
+        // Parse scorer and assists from ESPN text
+        // Format: "Player Name (N) assisted by X and Y at MM:SS"
+        var scorer = desc;
+        var assists = '';
+        var assistMatch = desc.match(/^(.+?)\s+assisted by\s+(.+?)(\s+at\s+|$)/i);
+        var unassistedMatch = desc.match(/^(.+?)\s*\(Unassisted\)/i);
+        var atIdx = desc.indexOf(' at ');
+        if (assistMatch) {
+          scorer = assistMatch[1].trim();
+          assists = assistMatch[2].trim();
+        } else if (unassistedMatch) {
+          scorer = unassistedMatch[1].trim();
+          assists = 'Unassisted';
+        } else if (atIdx >= 0) {
+          scorer = desc.substring(0, atIdx).trim();
+        }
+
+        html += '<div class="scoring-play' + (isKrakenGoal ? ' kraken-goal' : '') + '">'
+          + '<div class="play-header">'
+          + '<span class="period-tag">' + period + ' ' + clock + '</span>'
+          + (score ? '<span class="score-change">' + score + '</span>' : '')
+          + '</div>'
+          + '<div class="play-scorer">' + (isKrakenGoal ? '<span style="color:var(--ice)">&#9663;</span> ' : '<span style="color:var(--silver)">&#9663;</span> ') + scorer + '</div>'
+          + (assists && assists !== 'Unassisted' ? '<div class="play-assists">Assists: ' + assists + '</div>' : '')
+          + (assists === 'Unassisted' ? '<div class="play-assists">Unassisted</div>' : '')
+          + '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    // Top performers - use boxscore leaders
+    var leaders = (data.leaders || []).filter(function(l) { return l && l.leaders && l.leaders[0] && l.leaders[0].athlete; });
+    if (leaders.length > 0) {
+      html += '<div class="detail-section"><h4>Top Performers</h4><div class="matchup-row">';
+      leaders.slice(0, 4).forEach(function(leader) {
+        var l = leader.leaders[0];
+        var name = l.athlete ? l.athlete.displayName : '';
+        var stat = l.displayValue || '';
+        var cat = leader.displayName || leader.name || '';
+        if (name) {
+          html += '<div class="matchup-box">'
+            + '<div class="role">' + cat + '</div>'
+            + '<div class="name">' + name + '</div>'
+            + '<div class="stat">' + stat + '</div>'
+            + '</div>';
+        }
+      });
+      html += '</div></div>';
+    }
+
+    if (!html) html = '<div style="color:var(--silver);font-size:0.85rem;padding:0.5rem">No additional details available</div>';
+    panel.innerHTML = html;
+
+    // Update score on card with real scores and store them permanently
+    if (comp) {
+      var awayComp2 = comp.competitors.find(function(c) { return c.homeAway === 'away'; });
+      var homeComp2 = comp.competitors.find(function(c) { return c.homeAway === 'home'; });
+      var card = document.querySelector('[data-gameid="' + gameId + '"]');
+      if (card && awayComp2 && homeComp2) {
+        var awayScore = typeof awayComp2.score === 'object' ? (awayComp2.score.value||0) : (awayComp2.score||0);
+        var homeScore = typeof homeComp2.score === 'object' ? (homeComp2.score.value||0) : (homeComp2.score||0);
+        card.setAttribute('data-away-score', awayScore);
+        card.setAttribute('data-home-score', homeScore);
+        var scores = card.querySelectorAll('.team-score');
+        if (scores.length >= 2) {
+          scores[0].textContent = awayScore;
+          scores[1].textContent = homeScore;
+        }
+      }
+    }
+
+  } catch(err) {
+    panel.innerHTML = '<div class="error-msg">Could not load details: ' + err.message + '</div>';
+  }
+}
+
+// NEXT GAME
+async function loadNextGame() {
+  var card = document.getElementById('next-game');
+  try {
+    var data = await fetchESPN('teams/sea/schedule');
+    var events = data.events || [];
+    var upcoming = null;
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].competitions[0].status.type.state === 'pre') { upcoming = events[i]; break; }
+    }
+    if (!upcoming) {
+      card.innerHTML = '<div class="label">Next Game</div><p style="color:var(--silver);font-size:0.85rem">Schedule unavailable</p>';
+      return;
+    }
+    var comp = upcoming.competitions[0];
+    var opponent = null, isHome = false;
+    comp.competitors.forEach(function(c) {
+      if (String(c.team.id) !== KRAKEN_ID) opponent = c.team;
+      if (c.homeAway === 'home') isHome = true;
+    });
+    var gameDate = new Date(comp.date);
+    var logo = opponent ? getTeamLogo(opponent) : '';
+    card.innerHTML = '<div class="label">Next Game</div>'
+      + makeImg(logo, '', 'width:60px;height:60px;object-fit:contain;margin:0.5rem auto;display:block')
+      + '<div class="opponent">' + (isHome ? 'vs' : '@') + ' ' + (opponent ? opponent.abbreviation : '?') + '</div>'
+      + '<div class="game-time">' + gameDate.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) + '</div>'
+      + '<div class="game-time" style="color:var(--ice);margin-top:0.25rem">' + gameDate.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}) + '</div>';
+  } catch(err) {
+    card.innerHTML = '<div class="label">Next Game</div><div class="error-msg">Unavailable</div>';
+  }
+}
+
+// STANDINGS - Pacific via ESPN scoreboard which includes standings data
+async function loadStandings() {
+  var container = document.getElementById('standings-container');
+  try {
+    var data = await fetchNHL('standings/now');
+    var standings = data.standings || [];
+    var pacific = standings.filter(function(t) {
+      return (t.divisionName||'').indexOf('Pacific') >= 0;
+    });
+    pacific.sort(function(a,b) { return (a.divisionSequence||99)-(b.divisionSequence||99); });
+    if (!pacific.length) {
+      container.innerHTML = '<div style="color:var(--silver);font-size:0.8rem;padding:1rem;text-align:center">Standings unavailable</div>';
+      return;
+    }
+    var html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem"><thead><tr>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:left;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">Team</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">W</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">L</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">OTL</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">PTS</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">GP</th>'
+      + '<th style="padding:0.5rem 0.6rem;text-align:center;color:var(--ice);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,63,92,0.4)">STRK</th>'
+      + '</tr></thead><tbody>';
+    pacific.forEach(function(t) {
+      var abbrev = typeof t.teamAbbrev === 'object' ? t.teamAbbrev.default : (t.teamAbbrev||'');
+      var isKraken = abbrev === 'SEA';
+      var name = typeof t.teamCommonName === 'object' ? t.teamCommonName.default : (t.teamCommonName || abbrev);
+      var w = t.wins||0, l = t.losses||0, otl = t.otLosses||0, pts = t.points||0, gp = t.gamesPlayed||0;
+      var strk = t.streakCode ? t.streakCode + (t.streakCount||'') : '-';
+      var rowBg = isKraken ? 'background:rgba(153,217,217,0.08)' : '';
+      var textColor = isKraken ? 'color:var(--white);font-weight:700' : 'color:var(--silver)';
+      var td = 'style="padding:0.5rem 0.6rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.04);' + textColor + '"';
+      var td1 = 'style="padding:0.5rem 0.6rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);' + textColor + '"';
+      html += '<tr style="' + rowBg + '">'
+        + '<td ' + td1 + '>' + name + '</td>'
+        + '<td ' + td + '>' + w + '</td>'
+        + '<td ' + td + '>' + l + '</td>'
+        + '<td ' + td + '>' + otl + '</td>'
+        + '<td ' + td + '>' + pts + '</td>'
+        + '<td ' + td + '>' + gp + '</td>'
+        + '<td ' + td + '>' + strk + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch(err) {
+    container.innerHTML = '<div style="color:var(--silver);font-size:0.8rem;padding:1rem;text-align:center">Could not load standings: ' + err.message + '</div>';
+  }
+}
+
+async function loadNews() {
+  var container = document.getElementById('news-container');
+  try {
+    var data = await fetchESPN('news');
+    var allArticles = data.articles || [];
+    var krakenWords = ['kraken','seattle','beniers','mccann','eberle','dunn','montour',
+      'gourde','burakovsky','larsson','tanev','grubauer','daccord','hakstol','francis'];
+    var filtered = allArticles.filter(function(a) {
+      var text = ((a.headline||'') + ' ' + (a.description||'')).toLowerCase();
+      return krakenWords.some(function(k) { return text.includes(k); });
+    }).slice(0, 6);
+    if (filtered.length === 0) filtered = allArticles.slice(0, 6);
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="loading" style="animation:none">Check back soon for Kraken news</div>';
+      return;
+    }
+    var html = '';
+    filtered.forEach(function(a) {
+      var img = (a.images && a.images[0]) ? (a.images[0].url || '') : '';
+      var imgHtml = img ? '<img src="' + img + '" style="width:100%;height:155px;object-fit:cover;display:block" onerror="this.remove()" />' : '<div class="img-placeholder">&#127944;</div>';
+      var link = (a.links && a.links.web) ? a.links.web.href : '#';
+      html += '<a class="news-card" href="' + link + '" target="_blank" rel="noopener">'
+        + imgHtml + '<div class="news-body"><div class="news-label">Kraken</div>'
+        + '<h3>' + (a.headline||'') + '</h3>'
+        + '<p>' + (a.description||'') + '</p>'
+        + '</div></a>';
+    });
+    container.innerHTML = html;
+  } catch(err) {
+    container.innerHTML = '<div class="error-msg">Could not load news</div>';
+  }
+}
+
+// COUNTDOWN - find next home game
+async function loadCountdown() {
+  try {
+    var data = await fetchESPN('teams/sea/schedule');
+    var events = data.events || [];
+    var nextHome = null;
+    for (var i = 0; i < events.length; i++) {
+      var evt = events[i];
+      var comp = evt.competitions[0];
+      if (comp.status.type.state === 'pre') {
+        var homeTeam = comp.competitors.find(function(c) { return c.homeAway === 'home'; });
+        if (homeTeam && ((homeTeam.team.abbreviation||'').toUpperCase() === 'SEA' || String(homeTeam.team.id) === KRAKEN_ID)) { nextHome = comp; break; }
+      }
+    }
+    if (!nextHome) return;
+
+    var TARGET = new Date(nextHome.date);
+    var away = nextHome.competitors.find(function(c) { return c.homeAway === 'away'; });
+    var label = 'Next Home Game' + (away ? ' vs ' + away.team.abbreviation : '');
+    document.querySelector('.countdown-label').textContent = label;
+
+    function tick() {
+      var now = new Date();
+      var diff = TARGET - now;
+      if (diff <= 0) {
+        document.getElementById('countdown-banner').innerHTML = '<div class="countdown-done">&#127944; Puck Drop!</div>';
+        return;
+      }
+      var days = Math.floor(diff / 86400000);
+      var hours = Math.floor((diff % 86400000) / 3600000);
+      var mins = Math.floor((diff % 3600000) / 60000);
+      var secs = Math.floor((diff % 60000) / 1000);
+      var d = document.getElementById('cd-days');
+      var h = document.getElementById('cd-hours');
+      var m = document.getElementById('cd-mins');
+      var s = document.getElementById('cd-secs');
+      if (d) d.textContent = days;
+      if (h) h.textContent = String(hours).padStart(2,'0');
+      if (m) m.textContent = String(mins).padStart(2,'0');
+      if (s) s.textContent = String(secs).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
+  } catch(e) {}
+}
+
+// VISIT COUNTER
+async function loadVisitCount() {
+  try {
+    var res = await fetch('https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/visits');
+    var data = await res.json();
+    var el = document.getElementById('visit-count');
+    if (el) el.textContent = data.visits.toLocaleString();
+  } catch(e) {}
+}
+
+loadScores();
+loadNextGame();
+loadStandings();
+loadNews();
+loadCountdown();
+loadVisitCount();
+setInterval(function() {
+  var openIds = [];
+  document.querySelectorAll('.game-detail-panel.open').forEach(function(p) {
+    openIds.push(p.id.replace('detail-', ''));
+  });
+  loadScores(openIds);
+}, 60000);
+</script>
+</body>
+</html>

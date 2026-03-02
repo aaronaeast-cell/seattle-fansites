@@ -1,0 +1,500 @@
+<!--
+  Seattle Mariners Stats Page
+  Version: 1.1
+  Updated: 2026-02-27
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seattle Mariners Stats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --navy: #0C2C56; --teal: #005C5C; --silver: #C4CED4; --gold: #D4AF37; --white: #f8f9fa; --dark: #07192e; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: var(--dark); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+    .hero { background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 60%, #003333 100%); border-bottom: 3px solid var(--teal); padding: 1.5rem 3rem; display: flex; align-items: center; gap: 1.5rem; }
+    .hero img { height: 60px; width: auto; }
+    .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 0.05em; }
+    .hero h1 span { color: var(--teal); }
+    .hero a { color: var(--silver); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; margin-left: auto; border: 1px solid rgba(0,92,92,0.5); padding: 0.4rem 1rem; border-radius: 4px; transition: all 0.2s; }
+    .hero a:hover { border-color: var(--teal); color: var(--white); }
+
+    nav.main-nav { background: rgba(7,25,46,0.95); border-bottom: 1px solid rgba(0,92,92,0.4); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+    nav.main-nav ul { display: flex; list-style: none; padding: 0 2rem; overflow-x: auto; }
+    nav.main-nav a { display: block; padding: 1rem 1.5rem; color: var(--silver); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; transition: all 0.2s; border-bottom: 3px solid transparent; white-space: nowrap; }
+    nav.main-nav a:hover { color: var(--white); border-bottom-color: var(--teal); }
+    nav.main-nav a.active { color: var(--white); border-bottom-color: var(--teal); }
+    nav.tabs-nav { background: rgba(7,25,46,0.85); border-bottom: 1px solid rgba(0,92,92,0.2); position: sticky; top: 49px; z-index: 99; display: flex; }
+    .nav-tab { padding: 0.9rem 1.5rem; color: var(--silver); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; white-space: nowrap; }
+    .nav-tab:hover { color: var(--white); }
+    .nav-tab.active { color: var(--white); border-bottom-color: var(--teal); }
+    .nav-tab { padding: 0.9rem 1.5rem; color: var(--silver); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; }
+    .nav-tab:hover { color: var(--white); }
+    .nav-tab.active { color: var(--white); border-bottom-color: var(--teal); }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; }
+    .section-title .line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(0,92,92,0.6), transparent); }
+    .tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 3px; background: var(--teal); color: var(--white); }
+
+    .stats-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(0,92,92,0.3); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 600px; }
+    thead tr { background: rgba(0,92,92,0.35); }
+    th { padding: 0.7rem 0.75rem; text-align: center; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--silver); font-weight: 600; cursor: pointer; white-space: nowrap; user-select: none; }
+    th:hover { color: var(--white); }
+    th.sorted { color: var(--gold); }
+    th.sorted::after { content: ' \25BC'; font-size: 0.6rem; }
+    th.sorted.asc::after { content: ' \25B2'; }
+    td { padding: 0.6rem 0.75rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--silver); white-space: nowrap; }
+    td.name-col { text-align: left; color: var(--white); font-weight: 600; }
+    tbody tr:hover td { background: rgba(0,92,92,0.1); color: var(--white); }
+    tbody tr:last-child td { border-bottom: none; }
+    td.highlight { color: var(--gold); font-weight: 700; }
+    td.sea { color: #4ecdc4; font-weight: 600; }
+
+    .player-row { cursor: pointer; }
+    .player-detail-row { display: none; background: rgba(7,25,46,0.8); }
+    .player-detail-row.open { display: table-row; }
+    .player-detail-cell { padding: 1rem 1.5rem !important; text-align: left !important; }
+    .player-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; }
+    .detail-stat { background: rgba(0,92,92,0.15); border-radius: 6px; padding: 0.6rem; text-align: center; }
+    .detail-stat .val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--white); }
+    .detail-stat .lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--silver); margin-top: 0.1rem; }
+
+    .team-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: linear-gradient(135deg, rgba(12,44,86,0.6), rgba(0,92,92,0.2)); border: 1px solid rgba(0,92,92,0.3); border-radius: 10px; padding: 1.25rem; text-align: center; }
+    .stat-card .val { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--white); line-height: 1; }
+    .stat-card .lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--silver); margin-top: 0.4rem; }
+
+    .subsection-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.08em; color: var(--teal); margin: 1.5rem 0 0.75rem; }
+
+    .loading { text-align: center; padding: 3rem; color: var(--silver); font-size: 0.9rem; }
+    .loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(0,92,92,0.3); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 0.5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { text-align: center; padding: 2rem; color: #e74c3c; font-size: 0.85rem; }
+    .preseason-msg { text-align: center; padding: 1rem 2rem; color: var(--silver); font-size: 0.82rem; background: rgba(0,92,92,0.1); border-radius: 8px; border: 1px solid rgba(0,92,92,0.3); margin-bottom: 1rem; }
+
+    footer { text-align: center; padding: 2rem; color: rgba(255,255,255,0.2); font-size: 0.75rem; letter-spacing: 0.08em; border-top: 1px solid rgba(0,92,92,0.2); margin-top: 3rem; }
+
+    @media (max-width: 700px) {
+      .hero { padding: 1rem 1.5rem; }
+      .nav-tab { padding: 0.7rem 0.75rem; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <img src="moose.jpg" alt="Moose" onerror="this.remove()" />
+  <h1>Seattle <span>Mariners</span> Stats</h1>
+
+</header>
+
+<nav class="main-nav">
+  <ul>
+    <li><a href="index.html">Scores</a></li>
+    <li><a href="index.html#standings">Standings</a></li>
+    <li><a href="index.html#news">News</a></li>
+    <li><a href="stats.html" class="active">Stats</a></li>
+  </ul>
+</nav>
+<nav class="tabs-nav">
+  <div class="nav-tab active" data-section="batting">Batting</div>
+  <div class="nav-tab" data-section="pitching">Pitching</div>
+  <div class="nav-tab" data-section="fielding">Fielding</div>
+  <div class="nav-tab" data-section="team">Team</div>
+  <div class="nav-tab" data-section="roster">Roster</div>
+</nav>
+
+<main>
+  <div class="section active" id="section-batting">
+    <div class="section-title"><span>Batting Stats</span><div class="line"></div><span class="tag">2026</span></div>
+    <div id="batting-container"><div class="loading">Loading batting stats</div></div>
+  </div>
+  <div class="section" id="section-pitching">
+    <div class="section-title"><span>Pitching Stats</span><div class="line"></div><span class="tag">2026</span></div>
+    <div id="pitching-container"><div class="loading">Loading pitching stats</div></div>
+  </div>
+  <div class="section" id="section-fielding">
+    <div class="section-title"><span>Fielding Stats</span><div class="line"></div><span class="tag">2026</span></div>
+    <div id="fielding-container"><div class="loading">Loading fielding stats</div></div>
+  </div>
+  <div class="section" id="section-team">
+    <div class="section-title"><span>Team Stats</span><div class="line"></div><span class="tag">2026</span></div>
+    <div id="team-container"><div class="loading">Loading team stats</div></div>
+  </div>
+  <div class="section" id="section-roster">
+    <div class="section-title"><span>40-Man Roster</span><div class="line"></div><span class="tag">2026</span></div>
+    <div id="roster-container"><div class="loading">Loading roster</div></div>
+  </div>
+</main>
+
+<footer>Seattle Mariners Stats &bull; Data via MLB Stats API &bull; Not affiliated with MLB or the Seattle Mariners &bull; v1.1
+  <div style="margin-top:0.5rem;font-size:0.65rem;opacity:0.5">visitors: <span id="visit-count">...</span></div></footer>
+
+<script>
+var TEAM_ID = 136;
+var SEASON = 2026;
+var API = 'https://statsapi.mlb.com/api/v1';
+var loaded = {};
+
+// Nav
+document.querySelectorAll('.nav-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+    this.classList.add('active');
+    var sec = this.getAttribute('data-section');
+    document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('section-' + sec).classList.add('active');
+    if (!loaded[sec]) {
+      loaded[sec] = true;
+      if (sec === 'batting') loadBatting();
+      else if (sec === 'pitching') loadPitching();
+      else if (sec === 'fielding') loadFielding();
+      else if (sec === 'team') loadTeamStats();
+      else if (sec === 'roster') loadRoster();
+    }
+  });
+});
+
+function fmtAvg(v) {
+  var n = parseFloat(v);
+  if (!v || isNaN(n)) return '.---';
+  return n.toFixed(3).replace('0.', '.');
+}
+function fmtVal(v, d) {
+  if (v === undefined || v === null || v === '') return '-';
+  if (d !== undefined) return parseFloat(v).toFixed(d);
+  return v;
+}
+
+function preseasonNote() {
+  return '<div class="preseason-msg">&#9432; Full stats populate when the 2026 regular season begins March 27th. Spring training stats may be limited.</div>';
+}
+
+function makeDetailStats(pairs) {
+  var html = '<div class="player-detail-grid">';
+  pairs.forEach(function(p) {
+    html += '<div class="detail-stat"><div class="val">' + p[0] + '</div><div class="lbl">' + p[1] + '</div></div>';
+  });
+  return html + '</div>';
+}
+
+function addSortable(tableId) {
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var ths = table.querySelectorAll('th');
+  var col = -1, asc = false;
+  ths.forEach(function(th, idx) {
+    th.addEventListener('click', function() {
+      ths.forEach(function(h) { h.classList.remove('sorted','asc'); });
+      asc = (col === idx) ? !asc : false;
+      col = idx;
+      th.classList.add('sorted');
+      if (asc) th.classList.add('asc');
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr.player-row'));
+      rows.sort(function(a, b) {
+        var av = a.cells[idx] ? (a.cells[idx].getAttribute('data-val') || a.cells[idx].textContent.trim()) : '';
+        var bv = b.cells[idx] ? (b.cells[idx].getAttribute('data-val') || b.cells[idx].textContent.trim()) : '';
+        var an = parseFloat(av), bn = parseFloat(bv);
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(function(row) {
+        var det = document.getElementById('detail-' + row.getAttribute('data-playerid'));
+        tbody.appendChild(row);
+        if (det) tbody.appendChild(det);
+      });
+    });
+  });
+}
+
+function addExpandable(tableId) {
+  document.querySelectorAll('#' + tableId + ' .player-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var det = document.getElementById('detail-' + this.getAttribute('data-playerid'));
+      if (det) det.classList.toggle('open');
+    });
+  });
+}
+
+// BATTING
+async function loadBatting() {
+  var el = document.getElementById('batting-container');
+  try {
+    var url = API + '/teams/' + TEAM_ID + '/roster?rosterType=active&season=' + SEASON + '&hydrate=person(stats(type=season,group=hitting,season=' + SEASON + ',gameType=S))';
+    var data = await (await fetch(url)).json();
+    var roster = (data.roster || []).filter(function(p) { return p.position && p.position.abbreviation !== 'P'; });
+
+    var html = preseasonNote() + '<div class="stats-table-wrap"><table id="batting-table"><thead><tr>'
+      + '<th>Player</th><th>POS</th><th>G</th><th>AB</th><th>R</th><th>H</th>'
+      + '<th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>BB</th><th>SO</th>'
+      + '<th>SB</th><th>CS</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>'
+      + '</tr></thead><tbody>';
+
+    roster.forEach(function(p) {
+      var s = (p.person.stats && p.person.stats[0] && p.person.stats[0].splits && p.person.stats[0].splits[0]) ? p.person.stats[0].splits[0].stat : {};
+      var pid = p.person.id;
+      html += '<tr class="player-row" data-playerid="' + pid + '">'
+        + '<td class="name-col"><div style="display:flex;align-items:center;gap:0.5rem"><img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_100/v1/people/' + p.person.id + '/headshot/67/current" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'" />' + p.person.fullName + '</div></td>'
+        + '<td>' + (p.position ? p.position.abbreviation : '-') + '</td>'
+        + '<td data-val="' + (s.gamesPlayed||0) + '">' + fmtVal(s.gamesPlayed) + '</td>'
+        + '<td data-val="' + (s.atBats||0) + '">' + fmtVal(s.atBats) + '</td>'
+        + '<td data-val="' + (s.runs||0) + '">' + fmtVal(s.runs) + '</td>'
+        + '<td data-val="' + (s.hits||0) + '">' + fmtVal(s.hits) + '</td>'
+        + '<td data-val="' + (s.doubles||0) + '">' + fmtVal(s.doubles) + '</td>'
+        + '<td data-val="' + (s.triples||0) + '">' + fmtVal(s.triples) + '</td>'
+        + '<td data-val="' + (s.homeRuns||0) + '" class="' + (s.homeRuns > 0 ? 'highlight' : '') + '">' + fmtVal(s.homeRuns) + '</td>'
+        + '<td data-val="' + (s.rbi||0) + '">' + fmtVal(s.rbi) + '</td>'
+        + '<td data-val="' + (s.baseOnBalls||0) + '">' + fmtVal(s.baseOnBalls) + '</td>'
+        + '<td data-val="' + (s.strikeOuts||0) + '">' + fmtVal(s.strikeOuts) + '</td>'
+        + '<td data-val="' + (s.stolenBases||0) + '">' + fmtVal(s.stolenBases) + '</td>'
+        + '<td data-val="' + (s.caughtStealing||0) + '">' + fmtVal(s.caughtStealing) + '</td>'
+        + '<td data-val="' + (s.avg||0) + '" class="sea">' + fmtAvg(s.avg) + '</td>'
+        + '<td data-val="' + (s.obp||0) + '" class="sea">' + fmtAvg(s.obp) + '</td>'
+        + '<td data-val="' + (s.slg||0) + '" class="sea">' + fmtAvg(s.slg) + '</td>'
+        + '<td data-val="' + (s.ops||0) + '" class="highlight">' + fmtAvg(s.ops) + '</td>'
+        + '</tr>'
+        + '<tr class="player-detail-row" id="detail-' + pid + '"><td colspan="18" class="player-detail-cell">'
+        + makeDetailStats([
+            [fmtVal(s.plateAppearances),'PA'],
+            [fmtVal(s.totalBases),'Total Bases'],
+            [fmtVal(s.intentionalWalks),'IBB'],
+            [fmtVal(s.hitByPitch),'HBP'],
+            [fmtVal(s.sacFlies),'SAC Fly'],
+            [fmtVal(s.sacBunts),'SAC Bunt'],
+            [fmtVal(s.groundOuts),'GO'],
+            [fmtVal(s.airOuts),'FO'],
+            [fmtVal(s.leftOnBase),'LOB'],
+            [fmtVal(s.gamesStarted),'GS']
+          ])
+        + '</td></tr>';
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+    addSortable('batting-table');
+    addExpandable('batting-table');
+  } catch(err) {
+    el.innerHTML = '<div class="error-msg">Could not load batting stats: ' + err.message + '</div>';
+  }
+}
+
+// PITCHING
+async function loadPitching() {
+  var el = document.getElementById('pitching-container');
+  try {
+    var url = API + '/teams/' + TEAM_ID + '/roster?rosterType=active&season=' + SEASON + '&hydrate=person(stats(type=season,group=pitching,season=' + SEASON + ',gameType=S))';
+    var data = await (await fetch(url)).json();
+    var pitchers = (data.roster || []).filter(function(p) { return p.position && p.position.abbreviation === 'P'; });
+
+    var html = preseasonNote() + '<div class="stats-table-wrap"><table id="pitching-table"><thead><tr>'
+      + '<th>Player</th><th>G</th><th>GS</th><th>W</th><th>L</th><th>SV</th><th>HLD</th>'
+      + '<th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th><th>BB</th><th>SO</th>'
+      + '<th>ERA</th><th>WHIP</th><th>K/9</th><th>BB/9</th><th>K/BB</th>'
+      + '</tr></thead><tbody>';
+
+    pitchers.forEach(function(p) {
+      var s = (p.person.stats && p.person.stats[0] && p.person.stats[0].splits && p.person.stats[0].splits[0]) ? p.person.stats[0].splits[0].stat : {};
+      var pid = p.person.id;
+      html += '<tr class="player-row" data-playerid="' + pid + '">'
+        + '<td class="name-col"><div style="display:flex;align-items:center;gap:0.5rem"><img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_100/v1/people/' + p.person.id + '/headshot/67/current" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'" />' + p.person.fullName + '</div></td>'
+        + '<td data-val="' + (s.gamesPlayed||0) + '">' + fmtVal(s.gamesPlayed) + '</td>'
+        + '<td data-val="' + (s.gamesStarted||0) + '">' + fmtVal(s.gamesStarted) + '</td>'
+        + '<td data-val="' + (s.wins||0) + '" class="' + (s.wins > 0 ? 'sea' : '') + '">' + fmtVal(s.wins) + '</td>'
+        + '<td data-val="' + (s.losses||0) + '">' + fmtVal(s.losses) + '</td>'
+        + '<td data-val="' + (s.saves||0) + '" class="' + (s.saves > 0 ? 'highlight' : '') + '">' + fmtVal(s.saves) + '</td>'
+        + '<td data-val="' + (s.holds||0) + '">' + fmtVal(s.holds) + '</td>'
+        + '<td data-val="' + (parseFloat(s.inningsPitched)||0) + '">' + fmtVal(s.inningsPitched) + '</td>'
+        + '<td data-val="' + (s.hits||0) + '">' + fmtVal(s.hits) + '</td>'
+        + '<td data-val="' + (s.runs||0) + '">' + fmtVal(s.runs) + '</td>'
+        + '<td data-val="' + (s.earnedRuns||0) + '">' + fmtVal(s.earnedRuns) + '</td>'
+        + '<td data-val="' + (s.homeRuns||0) + '">' + fmtVal(s.homeRuns) + '</td>'
+        + '<td data-val="' + (s.baseOnBalls||0) + '">' + fmtVal(s.baseOnBalls) + '</td>'
+        + '<td data-val="' + (s.strikeOuts||0) + '">' + fmtVal(s.strikeOuts) + '</td>'
+        + '<td data-val="' + (parseFloat(s.era)||99) + '" class="' + (parseFloat(s.era) < 3.5 ? 'sea' : '') + '">' + fmtVal(s.era, 2) + '</td>'
+        + '<td data-val="' + (parseFloat(s.whip)||99) + '" class="' + (parseFloat(s.whip) < 1.2 ? 'highlight' : '') + '">' + fmtVal(s.whip, 2) + '</td>'
+        + '<td data-val="' + (parseFloat(s.strikeoutsPer9Inn)||0) + '">' + fmtVal(s.strikeoutsPer9Inn, 1) + '</td>'
+        + '<td data-val="' + (parseFloat(s.walksPer9Inn)||0) + '">' + fmtVal(s.walksPer9Inn, 1) + '</td>'
+        + '<td data-val="' + (parseFloat(s.strikeoutWalkRatio)||0) + '">' + fmtVal(s.strikeoutWalkRatio, 2) + '</td>'
+        + '</tr>'
+        + '<tr class="player-detail-row" id="detail-' + pid + '"><td colspan="19" class="player-detail-cell">'
+        + makeDetailStats([
+            [fmtVal(s.battersFaced),'BF'],
+            [fmtVal(s.numberOfPitches),'Pitches'],
+            [fmtVal(s.strikes),'Strikes'],
+            [fmtVal(s.hitBatsmen),'HBP'],
+            [fmtVal(s.wildPitches),'WP'],
+            [fmtVal(s.balks),'BK'],
+            [fmtVal(s.groundOuts),'GO'],
+            [fmtVal(s.airOuts),'FO'],
+            [fmtVal(s.completeGames),'CG'],
+            [fmtVal(s.shutouts),'SHO'],
+            [fmtVal(s.blownSaves),'BS'],
+            [fmtVal(s.saveOpportunities),'SVO'],
+            [fmtAvg(s.avg),'BAA'],
+            [fmtVal(s.hitsPer9Inn,1),'H/9']
+          ])
+        + '</td></tr>';
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+    addSortable('pitching-table');
+    addExpandable('pitching-table');
+  } catch(err) {
+    el.innerHTML = '<div class="error-msg">Could not load pitching stats: ' + err.message + '</div>';
+  }
+}
+
+// FIELDING
+async function loadFielding() {
+  var el = document.getElementById('fielding-container');
+  try {
+    var url = API + '/teams/' + TEAM_ID + '/roster?rosterType=active&season=' + SEASON + '&hydrate=person(stats(type=season,group=fielding,season=' + SEASON + ',gameType=S))';
+    var data = await (await fetch(url)).json();
+    var roster = data.roster || [];
+
+    var html = preseasonNote() + '<div class="stats-table-wrap"><table id="fielding-table"><thead><tr>'
+      + '<th>Player</th><th>POS</th><th>G</th><th>GS</th><th>INN</th>'
+      + '<th>TC</th><th>PO</th><th>A</th><th>E</th><th>DP</th><th>FPCT</th><th>RF/9</th>'
+      + '</tr></thead><tbody>';
+
+    roster.forEach(function(p) {
+      var statGroups = p.person.stats || [];
+      statGroups.forEach(function(sg) {
+        (sg.splits || []).forEach(function(split) {
+          var s = split.stat || {};
+          var pos = split.position ? split.position.abbreviation : (p.position ? p.position.abbreviation : '-');
+          var pid = p.person.id + '-' + pos;
+          html += '<tr class="player-row" data-playerid="' + pid + '">'
+            + '<td class="name-col"><div style="display:flex;align-items:center;gap:0.5rem"><img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_100/v1/people/' + p.person.id + '/headshot/67/current" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'" />' + p.person.fullName + '</div></td>'
+            + '<td>' + pos + '</td>'
+            + '<td data-val="' + (s.gamesPlayed||0) + '">' + fmtVal(s.gamesPlayed) + '</td>'
+            + '<td data-val="' + (s.gamesStarted||0) + '">' + fmtVal(s.gamesStarted) + '</td>'
+            + '<td data-val="' + (parseFloat(s.innings)||0) + '">' + fmtVal(s.innings) + '</td>'
+            + '<td data-val="' + (s.chances||0) + '">' + fmtVal(s.chances) + '</td>'
+            + '<td data-val="' + (s.putOuts||0) + '">' + fmtVal(s.putOuts) + '</td>'
+            + '<td data-val="' + (s.assists||0) + '">' + fmtVal(s.assists) + '</td>'
+            + '<td data-val="' + (s.errors||0) + '" class="' + (parseInt(s.errors) > 0 ? 'highlight' : 'sea') + '">' + fmtVal(s.errors) + '</td>'
+            + '<td data-val="' + (s.doublePlays||0) + '">' + fmtVal(s.doublePlays) + '</td>'
+            + '<td data-val="' + (parseFloat(s.fielding)||0) + '" class="sea">' + fmtAvg(s.fielding) + '</td>'
+            + '<td data-val="' + (parseFloat(s.rangeFactorPer9Inn)||0) + '">' + fmtVal(s.rangeFactorPer9Inn, 2) + '</td>'
+            + '</tr>';
+        });
+      });
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+    addSortable('fielding-table');
+  } catch(err) {
+    el.innerHTML = '<div class="error-msg">Could not load fielding stats: ' + err.message + '</div>';
+  }
+}
+
+// TEAM STATS
+async function loadTeamStats() {
+  var el = document.getElementById('team-container');
+  try {
+    var [hitRes, pitRes] = await Promise.all([
+      fetch(API + '/teams/' + TEAM_ID + '/stats?stats=season&group=hitting&season=' + SEASON),
+      fetch(API + '/teams/' + TEAM_ID + '/stats?stats=season&group=pitching&season=' + SEASON)
+    ]);
+    var hs = ((await hitRes.json()).stats || [{}])[0];
+    hs = (hs.splits && hs.splits[0]) ? hs.splits[0].stat : {};
+    var ps = ((await pitRes.json()).stats || [{}])[0];
+    ps = (ps.splits && ps.splits[0]) ? ps.splits[0].stat : {};
+
+    var html = preseasonNote();
+    html += '<div class="subsection-title">Team Batting</div><div class="team-stats-grid">';
+    [
+      [fmtAvg(hs.avg),'Team AVG'], [fmtAvg(hs.obp),'Team OBP'], [fmtAvg(hs.slg),'Team SLG'],
+      [fmtAvg(hs.ops),'Team OPS'], [fmtVal(hs.homeRuns),'Home Runs'], [fmtVal(hs.runs),'Runs Scored'],
+      [fmtVal(hs.hits),'Hits'], [fmtVal(hs.doubles),'Doubles'], [fmtVal(hs.triples),'Triples'],
+      [fmtVal(hs.stolenBases),'Stolen Bases'], [fmtVal(hs.strikeOuts),'Strikeouts'], [fmtVal(hs.baseOnBalls),'Walks'],
+      [fmtVal(hs.leftOnBase),'Left on Base'], [fmtVal(hs.atBats),'At Bats']
+    ].forEach(function(s) {
+      html += '<div class="stat-card"><div class="val">' + s[0] + '</div><div class="lbl">' + s[1] + '</div></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="subsection-title">Team Pitching</div><div class="team-stats-grid">';
+    [
+      [fmtVal(ps.era,2),'Team ERA'], [fmtVal(ps.whip,2),'Team WHIP'], [fmtVal(ps.strikeOuts),'Strikeouts'],
+      [fmtVal(ps.strikeoutsPer9Inn,1),'K/9'], [fmtVal(ps.walksPer9Inn,1),'BB/9'], [fmtVal(ps.homeRuns),'HR Allowed'],
+      [fmtVal(ps.saves),'Saves'], [fmtVal(ps.blownSaves),'Blown Saves'], [fmtVal(ps.holds),'Holds'],
+      [fmtVal(ps.shutouts),'Shutouts'], [fmtVal(ps.completeGames),'Complete Games'], [fmtVal(ps.hits),'Hits Allowed'],
+      [fmtVal(ps.runs),'Runs Allowed'], [fmtVal(ps.baseOnBalls),'Walks Allowed']
+    ].forEach(function(s) {
+      html += '<div class="stat-card"><div class="val">' + s[0] + '</div><div class="lbl">' + s[1] + '</div></div>';
+    });
+    html += '</div>';
+
+    el.innerHTML = html;
+  } catch(err) {
+    el.innerHTML = '<div class="error-msg">Could not load team stats: ' + err.message + '</div>';
+  }
+}
+
+// ROSTER
+async function loadRoster() {
+  var el = document.getElementById('roster-container');
+  try {
+    var url = API + '/teams/' + TEAM_ID + '/roster?rosterType=40Man&season=' + SEASON + '&hydrate=person(currentAge,birthCity,birthCountry,height,weight,batSide,pitchHand)';
+    var data = await (await fetch(url)).json();
+    var roster = (data.roster || []).sort(function(a, b) {
+      var order = ['C','1B','2B','3B','SS','LF','CF','RF','OF','DH','P'];
+      var ai = order.indexOf(a.position ? a.position.abbreviation : 'P');
+      var bi = order.indexOf(b.position ? b.position.abbreviation : 'P');
+      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    });
+
+    var html = preseasonNote() + '<div class="stats-table-wrap"><table id="roster-table"><thead><tr>'
+      + '<th>#</th><th>Player</th><th>POS</th><th>B/T</th><th>HT</th><th>WT</th><th>Age</th><th>Birthplace</th>'
+      + '</tr></thead><tbody>';
+
+    roster.forEach(function(p) {
+      var person = p.person;
+      html += '<tr>'
+        + '<td>' + (p.jerseyNumber || '-') + '</td>'
+        + '<td class="name-col"><div style="display:flex;align-items:center;gap:0.5rem"><img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_100/v1/people/' + person.id + '/headshot/67/current" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'" />' + person.fullName + '</div></td>'
+        + '<td>' + (p.position ? p.position.abbreviation : '-') + '</td>'
+        + '<td>' + (person.batSide ? person.batSide.code : '-') + '/' + (person.pitchHand ? person.pitchHand.code : '-') + '</td>'
+        + '<td>' + (person.height || '-') + '</td>'
+        + '<td>' + (person.weight ? person.weight + ' lbs' : '-') + '</td>'
+        + '<td>' + (person.currentAge || '-') + '</td>'
+        + '<td>' + ([person.birthCity, person.birthCountry].filter(Boolean).join(', ') || '-') + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+    addSortable('roster-table');
+  } catch(err) {
+    el.innerHTML = '<div class="error-msg">Could not load roster: ' + err.message + '</div>';
+  }
+}
+
+loaded['batting'] = true;
+loadBatting();
+
+async function loadVisitCount() {
+  try {
+    var res = await fetch('https://r8d99vw1bl.execute-api.us-west-2.amazonaws.com/visits');
+    var data = await res.json();
+    var el = document.getElementById('visit-count');
+    if (el) el.textContent = data.visits.toLocaleString();
+  } catch(e) {}
+}
+loadVisitCount();
+</script>
