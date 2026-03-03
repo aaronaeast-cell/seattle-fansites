@@ -1,7 +1,7 @@
 <!--
   Seattle Kraken Fan Site
-  Version: 1.0
-  Updated: 2026-02-28
+  Version: 1.4
+  Updated: 2026-03-03
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -228,6 +228,35 @@
       nav ul { padding: 0 0.5rem; }
       nav a { padding: 0.7rem 0.75rem; font-size: 0.8rem; }
     }
+
+    /* TV BROADCAST CHIPS */
+    .tv-chips { display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:center; margin:0.6rem 0; }
+    .tv-chip { font-size:0.62rem; font-weight:600; letter-spacing:0.06em; padding:0.2rem 0.5rem; border-radius:3px; background:rgba(162,170,173,0.15); color:var(--silver); border:1px solid rgba(162,170,173,0.2); text-transform:uppercase; }
+    .tv-local { background:rgba(153,217,217,0.12); color:var(--ice); border-color:rgba(153,217,217,0.3); }
+
+    /* LIVE GAME CARD */
+    .live-label { color:var(--red) !important; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .live-score-row { display:flex; align-items:center; justify-content:center; gap:1.5rem; margin:0.75rem 0; }
+    .live-team { display:flex; flex-direction:column; align-items:center; gap:0.25rem; }
+    .live-team img { width:50px; height:50px; object-fit:contain; }
+    .live-abbr { font-size:0.75rem; font-weight:700; letter-spacing:0.1em; color:var(--silver); }
+    .live-score { font-family:'Barlow Condensed', sans-serif; font-size:2.5rem; font-weight:800; color:var(--white); line-height:1; }
+    .sea-live .live-score { color:var(--ice); }
+    .live-vs { font-size:1rem; color:var(--silver); font-weight:600; }
+    .sog-row { display:flex; justify-content:space-between; font-size:0.68rem; color:var(--silver); margin:0.25rem 0; padding:0 0.25rem; letter-spacing:0.05em; }
+
+    /* TEAM LEADERS */
+    .leader-row { display:flex; gap:0.75rem; justify-content:center; margin:0.75rem 0; }
+    .leader-item { display:flex; align-items:center; gap:0.5rem; background:rgba(0,63,92,0.3); border:1px solid rgba(153,217,217,0.1); border-radius:6px; padding:0.5rem 0.65rem; }
+    .leader-headshot { width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid rgba(153,217,217,0.2); }
+    .leader-info { text-align:left; }
+    .leader-name { font-size:0.72rem; font-weight:600; color:var(--white); line-height:1.2; }
+    .leader-stat { font-size:0.62rem; color:var(--ice); letter-spacing:0.05em; text-transform:capitalize; }
+
+    /* GAMECENTER LINK */
+    .gc-link { display:inline-block; margin-top:0.75rem; font-size:0.68rem; color:var(--ice); text-decoration:none; letter-spacing:0.08em; text-transform:uppercase; border-bottom:1px solid rgba(153,217,217,0.3); padding-bottom:1px; transition:color 0.2s; }
+    .gc-link:hover { color:var(--white); }
   </style>
 </head>
 <body>
@@ -319,7 +348,7 @@
 </main>
 
 <footer>
-  Seattle Kraken Fan Site &bull; Scores &amp; data via ESPN &bull; Not affiliated with the NHL or Seattle Kraken &bull; v1.0
+  Seattle Kraken Fan Site &bull; Scores &amp; data via ESPN &bull; Not affiliated with the NHL or Seattle Kraken &bull; v1.4
   <div style="margin-top:0.5rem;font-size:0.65rem;opacity:0.5">visitors: <span id="visit-count">...</span></div>
 </footer>
 
@@ -643,35 +672,133 @@ async function loadGameDetail(gameId, panel) {
   }
 }
 
-// NEXT GAME
+// NEXT/LIVE GAME - uses NHL API for rich data including TV broadcasts, SOG, team leaders
 async function loadNextGame() {
   var card = document.getElementById('next-game');
   try {
-    var data = await fetchESPN('teams/sea/schedule');
-    var events = data.events || [];
-    var upcoming = null;
-    for (var i = 0; i < events.length; i++) {
-      if (events[i].competitions[0].status.type.state === 'pre') { upcoming = events[i]; break; }
-    }
-    if (!upcoming) {
-      card.innerHTML = '<div class="label">Next Game</div><p style="color:var(--silver);font-size:0.85rem">Schedule unavailable</p>';
+    var data = await fetchNHL('score/now');
+    var games = data.games || [];
+
+    // Find Kraken game - live first, then upcoming
+    var liveGame = games.find(function(g) {
+      return g.gameState === 'LIVE' && (g.homeTeam.abbrev === 'SEA' || g.awayTeam.abbrev === 'SEA');
+    });
+    var nextGame = games.find(function(g) {
+      return (g.gameState === 'FUT' || g.gameState === 'PRE') && (g.homeTeam.abbrev === 'SEA' || g.awayTeam.abbrev === 'SEA');
+    });
+
+    var game = liveGame || nextGame;
+
+    // If no game today, fetch schedule for next upcoming
+    if (!game) {
+      try {
+        var schedData = await fetchESPN('teams/sea/schedule');
+        var events = schedData.events || [];
+        var upcoming = null;
+        for (var i = 0; i < events.length; i++) {
+          if (events[i].competitions[0].status.type.state === 'pre') { upcoming = events[i]; break; }
+        }
+        if (!upcoming) {
+          card.innerHTML = '<div class="label">Next Game</div><p style="color:var(--silver);font-size:0.85rem">Schedule unavailable</p>';
+          return;
+        }
+        var comp = upcoming.competitions[0];
+        var opponent = null, isHome = false;
+        comp.competitors.forEach(function(c) {
+          if (String(c.team.id) !== KRAKEN_ID) opponent = c.team;
+          if (c.homeAway === 'home') isHome = true;
+        });
+        var gameDate = new Date(comp.date);
+        var logo = opponent ? getTeamLogo(opponent) : '';
+        card.innerHTML = '<div class="label">Next Game</div>'
+          + makeImg(logo, '', 'width:60px;height:60px;object-fit:contain;margin:0.5rem auto;display:block')
+          + '<div class="opponent">' + (isHome ? 'vs' : '@') + ' ' + (opponent ? opponent.abbreviation : '?') + '</div>'
+          + '<div class="game-time">' + gameDate.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) + '</div>'
+          + '<div class="game-time" style="color:var(--ice);margin-top:0.25rem">' + gameDate.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}) + '</div>';
+      } catch(e) {
+        card.innerHTML = '<div class="label">Next Game</div><div class="error-msg">Unavailable</div>';
+      }
       return;
     }
-    var comp = upcoming.competitions[0];
-    var opponent = null, isHome = false;
-    comp.competitors.forEach(function(c) {
-      if (String(c.team.id) !== KRAKEN_ID) opponent = c.team;
-      if (c.homeAway === 'home') isHome = true;
-    });
-    var gameDate = new Date(comp.date);
-    var logo = opponent ? getTeamLogo(opponent) : '';
-    card.innerHTML = '<div class="label">Next Game</div>'
-      + makeImg(logo, '', 'width:60px;height:60px;object-fit:contain;margin:0.5rem auto;display:block')
-      + '<div class="opponent">' + (isHome ? 'vs' : '@') + ' ' + (opponent ? opponent.abbreviation : '?') + '</div>'
-      + '<div class="game-time">' + gameDate.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) + '</div>'
-      + '<div class="game-time" style="color:var(--ice);margin-top:0.25rem">' + gameDate.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}) + '</div>';
+
+    var isLive = game.gameState === 'LIVE';
+    var isHome = game.homeTeam.abbrev === 'SEA';
+    var opponent = isHome ? game.awayTeam : game.homeTeam;
+    var krakenTeam = isHome ? game.homeTeam : game.awayTeam;
+
+    // TV Broadcasts - filter US broadcasts, prefer local Seattle feed
+    var broadcasts = game.tvBroadcasts || [];
+    var tvHtml = '';
+    if (broadcasts.length > 0) {
+      var nets = broadcasts
+        .filter(function(b) { return b.countryCode === 'US'; })
+        .sort(function(a,b) { return a.sequenceNumber - b.sequenceNumber; })
+        .map(function(b) { return b.network; });
+      if (nets.length > 0) {
+        tvHtml = '<div class="tv-chips">'
+          + nets.map(function(n) {
+              var isLocal = n.indexOf('FDSNSO') >= 0 || n.indexOf('ROOT') >= 0 || n.indexOf('KONG') >= 0;
+              return '<span class="tv-chip' + (isLocal ? ' tv-local' : '') + '">' + n + '</span>';
+            }).join('')
+          + '</div>';
+      }
+    }
+
+    if (isLive) {
+      // LIVE GAME CARD
+      var clock = game.clock || {};
+      var period = game.periodDescriptor || {};
+      var periodNum = period.number || 1;
+      var periodLabel = periodNum <= 3 ? 'P' + periodNum : 'OT';
+      var timeStr = clock.timeRemaining || '';
+      var intermission = clock.inIntermission ? ' &bull; Intermission' : '';
+      var clockStr = timeStr + intermission;
+
+      var sogHtml = '<div class="sog-row"><span>' + (opponent.abbrev) + ' ' + (opponent.sog||0) + ' SOG</span><span>SEA ' + (krakenTeam.sog||0) + ' SOG</span></div>';
+
+      // Team leaders
+      var leadersHtml = '';
+      var leaders = game.teamLeaders || [];
+      var seaLeaders = leaders.filter(function(l) { return l.teamAbbrev === 'SEA'; }).slice(0,2);
+      if (seaLeaders.length > 0) {
+        leadersHtml = '<div class="leader-row">'
+          + seaLeaders.map(function(l) {
+            return '<div class="leader-item">'
+              + (l.headshot ? '<img src="' + l.headshot + '" class="leader-headshot" onerror="this.remove()" />' : '')
+              + '<div class="leader-info">'
+              + '<div class="leader-name">' + l.firstName.default + ' ' + l.lastName.default + '</div>'
+              + '<div class="leader-stat">' + l.value + ' ' + l.category + '</div>'
+              + '</div></div>';
+          }).join('')
+          + '</div>';
+      }
+
+      var gcLink = game.gameCenterLink ? 'https://www.nhl.com' + game.gameCenterLink : '';
+
+      card.innerHTML = '<div class="label live-label">&#9679; LIVE &mdash; ' + periodLabel + ' ' + clockStr + '</div>'
+        + '<div class="live-score-row">'
+        + '<div class="live-team"><img src="' + opponent.logo + '" onerror="this.remove()" /><span class="live-abbr">' + opponent.abbrev + '</span><span class="live-score">' + (opponent.score||0) + '</span></div>'
+        + '<div class="live-vs">@</div>'
+        + '<div class="live-team sea-live"><img src="' + krakenTeam.logo + '" onerror="this.remove()" /><span class="live-abbr">SEA</span><span class="live-score">' + (krakenTeam.score||0) + '</span></div>'
+        + '</div>'
+        + sogHtml
+        + tvHtml
+        + leadersHtml
+        + (gcLink ? '<a href="' + gcLink + '" target="_blank" class="gc-link">NHL GameCenter &#8599;</a>' : '');
+
+    } else {
+      // UPCOMING GAME CARD
+      var gameDate = new Date(game.startTimeUTC);
+      card.innerHTML = '<div class="label">Next Game</div>'
+        + '<img src="' + opponent.logo + '" style="width:60px;height:60px;object-fit:contain;margin:0.5rem auto;display:block" onerror="this.remove()" />'
+        + '<div class="opponent">' + (isHome ? 'vs' : '@') + ' ' + opponent.abbrev + '</div>'
+        + '<div class="game-time">' + gameDate.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) + '</div>'
+        + '<div class="game-time" style="color:var(--ice);margin-top:0.25rem">' + gameDate.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}) + '</div>'
+        + tvHtml;
+    }
+
   } catch(err) {
-    card.innerHTML = '<div class="label">Next Game</div><div class="error-msg">Unavailable</div>';
+    card.innerHTML = '<div class="label">Next Game</div><div class="error-msg">' + err.message + '</div>';
   }
 }
 
@@ -827,6 +954,9 @@ setInterval(function() {
   });
   loadScores(openIds);
 }, 60000);
+
+// Refresh next/live game card every 30 seconds
+setInterval(function() { loadNextGame(); }, 30000);
 </script>
 </body>
 </html>
