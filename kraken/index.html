@@ -1084,6 +1084,150 @@ setInterval(function() {
 
 // Refresh next/live game card every 30 seconds
 setInterval(function() { loadNextGame(); }, 30000);
+
+// ============================================================
+// PLAYER HOVER CARD
+// ============================================================
+(function() {
+  var card = document.getElementById('player-hover-card');
+  var hideTimer = null;
+  var currentPlayer = null;
+  var playerCache = {};
+
+  function positionCard(e) {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var cx = 230, cy = 210;
+    var x = e.clientX + 14;
+    var y = e.clientY + 14;
+    if (x + cx > vw - 10) x = e.clientX - cx - 10;
+    if (y + cy > vh - 10) y = e.clientY - cy - 10;
+    card.style.left = x + 'px';
+    card.style.top  = y + 'px';
+  }
+
+  async function fetchPlayerData(name) {
+    if (playerCache[name]) return playerCache[name];
+    var searchUrl = 'https://site.api.espn.com/apis/search/v2?query=' + encodeURIComponent(name) + '&limit=5&sport=hockey&league=nhl';
+    var res = await fetch(searchUrl);
+    var data = await res.json();
+    var athleteGroup = (data.results || []).find(function(r) { return r.type === 'athlete'; });
+    if (!athleteGroup || !athleteGroup.contents || !athleteGroup.contents[0]) return null;
+    var pid = athleteGroup.contents[0].id;
+
+    var statsUrl = 'https://site.web.api.espn.com/apis/common/v3/sports/hockey/nhl/athletes/' + pid + '/stats?region=us&lang=en&contentorigin=espn&season=2025&seasontype=2';
+    var infoUrl  = 'https://site.web.api.espn.com/apis/common/v3/sports/hockey/nhl/athletes/' + pid + '?region=us&lang=en&contentorigin=espn';
+
+    var results = await Promise.allSettled([fetch(infoUrl), fetch(statsUrl)]);
+    var infoData  = results[0].status === 'fulfilled' ? await results[0].value.json() : {};
+    var statsData = results[1].status === 'fulfilled' ? await results[1].value.json() : {};
+
+    var info = infoData.athlete || {};
+    var out = {
+      name:     info.displayName || name,
+      number:   info.jersey ? '#' + info.jersey : '',
+      pos:      (info.position && info.position.abbreviation) ? info.position.abbreviation : '',
+      team:     (info.team && info.team.abbreviation) ? info.team.abbreviation : '',
+      headshot: (info.headshot && info.headshot.href) ? info.headshot.href : '',
+      stats:    {}
+    };
+
+    var splits = (statsData.splits && statsData.splits.categories) ? statsData.splits.categories : [];
+    splits.forEach(function(cat) {
+      (cat.stats || []).forEach(function(s) {
+        out.stats[s.abbreviation || s.name] = s.displayValue !== undefined ? s.displayValue : s.value;
+      });
+    });
+
+    playerCache[name] = out;
+    return out;
+  }
+
+  function renderCard(p) {
+    var headshotHtml = p.headshot
+      ? '<img src="' + p.headshot + '" class="phc-headshot" onerror="this.style.display=\'none\'" />'
+      : '<div class="phc-headshot-placeholder">&#128100;</div>';
+
+    var statDefs = [
+      {k:'G',   label:'Goals'},
+      {k:'A',   label:'Assists'},
+      {k:'PTS', label:'Points'},
+      {k:'GP',  label:'GP'},
+      {k:'+/-', label:'+/-'},
+      {k:'plusMinus', label:'+/-'},
+      {k:'TOI', label:'TOI/G'}
+    ];
+    var statHtml = '';
+    var shown = 0;
+    var seenLabels = {};
+    statDefs.forEach(function(sk) {
+      if (shown >= 4) return;
+      if (seenLabels[sk.label]) return;
+      var val = p.stats[sk.k];
+      if (val !== undefined && val !== null && val !== '') {
+        statHtml += '<div class="phc-stat"><div class="phc-stat-val">' + val + '</div><div class="phc-stat-lbl">' + sk.label + '</div></div>';
+        shown++;
+        seenLabels[sk.label] = true;
+      }
+    });
+    if (!statHtml) {
+      statHtml = '<div class="phc-stat" style="grid-column:span 2;color:var(--silver);font-size:0.75rem;padding:0.5rem 0">No stats available</div>';
+    }
+
+    card.innerHTML = '<div class="phc-header">'
+      + headshotHtml
+      + '<div class="phc-info">'
+      + '<div class="phc-name">' + p.name + '</div>'
+      + (p.number ? '<div class="phc-number">' + p.number + '</div>' : '')
+      + '<div class="phc-pos-team">' + [p.pos, p.team].filter(Boolean).join(' \u2022 ') + '</div>'
+      + '</div></div>'
+      + '<div class="phc-body">' + statHtml + '</div>'
+      + '<div class="phc-footer">2024\u201325 Season</div>';
+  }
+
+  async function showCard(name, e) {
+    if (currentPlayer === name && card.classList.contains('visible')) return;
+    currentPlayer = name;
+    card.innerHTML = '<div class="phc-loading">Loading...</div>';
+    card.classList.add('visible');
+    positionCard(e);
+    try {
+      var p = await fetchPlayerData(name);
+      if (currentPlayer !== name) return;
+      if (!p) { card.innerHTML = '<div class="phc-loading">Player not found</div>'; return; }
+      renderCard(p);
+    } catch(err) {
+      if (currentPlayer === name) card.innerHTML = '<div class="phc-loading">Could not load player</div>';
+    }
+  }
+
+  function hideCard() {
+    card.classList.remove('visible');
+    currentPlayer = null;
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var link = e.target && e.target.closest ? e.target.closest('.player-link') : null;
+    if (!link) return;
+    clearTimeout(hideTimer);
+    var name = (link.getAttribute('data-player') || link.textContent || '').trim();
+    if (name) showCard(name, e);
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (card.classList.contains('visible')) positionCard(e);
+  });
+
+  document.addEventListener('mouseout', function(e) {
+    var link = e.target && e.target.closest ? e.target.closest('.player-link') : null;
+    if (!link) return;
+    hideTimer = setTimeout(hideCard, 200);
+  });
+
+  card.addEventListener('mouseenter', function() { clearTimeout(hideTimer); });
+  card.addEventListener('mouseleave', function() { hideTimer = setTimeout(hideCard, 200); });
+})();
+
 </script>
 
 <!-- PLAYER HOVER CARD -->
